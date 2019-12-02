@@ -1,0 +1,7 @@
+.ChatWrapper {
+
+}
+
+.ChatWrapper input[type=text] {
+    text-align: right;
+}

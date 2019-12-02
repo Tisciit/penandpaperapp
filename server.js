@@ -3,8 +3,14 @@ const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
 
 ioSocket.on("connection", client => {
-   console.log(client.id);
+    console.log(client.id);
 });
+
+ioSocket.in("/").on("message", client => {
+    console.log(client);
+});
+
+
 
 app.get("/", (req, res) => {
     console.log("yay")
