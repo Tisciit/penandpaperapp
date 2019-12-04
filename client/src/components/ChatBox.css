@@ -6,13 +6,16 @@
 }
 
 .ChatWrapper .Chathistory {
-    font-weight: 1em;
+    font-size: 1em;
     max-height: 20rem;
     overflow-y: scroll;
 }
+.ChatWrapper .Chathistory p{
+    margin: 0;
+}
 
 .ChatWrapper input {
-    text-align: right;
+    width: 80%;
 }
 
 .ChatWrapper button {
@@ -21,4 +24,6 @@
     height: 2rem;
     background: #322834;
     color: #E8E8E8;
+    border: 1px solid #E8E8E8;
+    border-radius: 5px;
 }

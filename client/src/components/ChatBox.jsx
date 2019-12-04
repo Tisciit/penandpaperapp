@@ -23,6 +23,10 @@ export const ChatBox = () => {
 
 
     const sendMsg = () => {
+        if (message == "") {
+            return;
+        }
+
         if (message.startsWith("/")) {
             //This is a command
             const command = message.substr(1);
@@ -45,8 +49,10 @@ export const ChatBox = () => {
             <div className="Chathistory">
                 {history.map(elt => elt)}
             </div>
-            <input onKeyDown={(e) => { if (e.keyCode === 13) { sendMsg() } }} onChange={(e) => { setMessage(e.target.value) }} value={message} />
-            <button onClick={sendMsg}>Send</button>
+            <div>
+                <input onKeyDown={(e) => { if (e.keyCode === 13) { sendMsg() } }} onChange={(e) => { setMessage(e.target.value) }} value={message} />
+                <button onClick={sendMsg}>Send</button>
+            </div>
         </div>
     )
 }

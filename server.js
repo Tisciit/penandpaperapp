@@ -22,8 +22,9 @@ ioSocket.on("connection", client => {
         }
 
         ioSocket.emit("CHAT", data);
-    })
+    });
 });
+
 
 
 app.get("/", (req, res) => {
