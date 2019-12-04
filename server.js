@@ -2,19 +2,32 @@ const app = require("express")();
 const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
 
+
+
+const chatHistory = [];
+
 ioSocket.on("connection", client => {
-    console.log(client.id);
-});
 
-ioSocket.in("/").on("message", client => {
-    console.log(client);
-});
+    //#region Events for "/" commands
+    client.on("/name", newName => {
+        client.name = newName;
+    });
 
+    client.on("CHAT", (message) => {
+        let id = chatHistory.push({ "client": client.id, message });
+        const data = {
+            id,
+            user: client.name || client.id,
+            message: message
+        }
+
+        ioSocket.emit("CHAT", data);
+    })
+});
 
 
 app.get("/", (req, res) => {
-    console.log("yay")
-    res.send("HALLO!")
+    res.send(JSON.stringify(chatHistory));
 });
 
 const PORT = 5000;
