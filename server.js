@@ -21,7 +21,7 @@ ioSocket.on("connection", client => {
   });
 
   client.on(CHAT, message => {
-    let id = chatHistory.push({ client: client.id, message });
+    const id = chatHistory.push({ client: client.id, message });
     const data = {
       id,
       user: client.name || client.id,
