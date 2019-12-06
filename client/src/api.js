@@ -9,30 +9,34 @@ const C_NAME = "/NAME";
 
 
 export const subscribeChat = cb => {
-  socket.on(CHAT, data => cb(data));
+    socket.on(CHAT, data => cb(data));
 };
 
 export const unsubscribeChat = () => {
-  socket.off(CHAT);
+    socket.off(CHAT);
 };
 
 export const sendChat = message => {
-  socket.emit(CHAT, message);
+    socket.emit(CHAT, message);
 };
 
 export const changeName = newName => {
-  socket.emit(C_NAME, newName);
+    socket.emit(C_NAME, newName);
 };
 
-export const audioURL = ("http://localhost:5000/audio");
+export const audioURL = "http://" + window.location.hostname + ":5000/audio";
 
-export const subscribeAudio = cb => {
-  socket.on(AUDIO, data => cb(data));
+export const subAudio = cb => {
+    socket.on(AUDIO, data => cb(data));
 };
 
-export const unsubscribeAudio = () => {
-  socket.off(AUDIO);
+export const unsubAudio = () => {
+    socket.off(AUDIO);
 };
+
+export const gm_Change_song = (newSong) => {
+    socket.emit("GM_CHANGE_SONG", newSong)
+}
 
 export const requestRoll = (parameters) => {
     socket.emit(DICE_ROLL, parameters);
