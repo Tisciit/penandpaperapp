@@ -1,6 +1,7 @@
 const app = require("express")();
 const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
+const fs = require("fs");
 
 const chatHistory = [];
 
@@ -9,7 +10,7 @@ ioSocket.on("connection", client => {
   /**
    * Write all in UPPERCASE
    * Prefix "Commands" with C_
-   *  
+   *
    */
   const CHAT = "CHAT";
   const C_NAME = "/NAME";
@@ -33,7 +34,12 @@ ioSocket.on("connection", client => {
 });
 
 app.get("/", (req, res) => {
-  res.send(JSON.stringify(chatHistory));
+  res.send(chatHistory);
+});
+
+app.get("/audio", (req, res) => {
+  const src = fs.createReadStream("./sound/beat.mp3");
+  src.pipe(res);
 });
 
 const PORT = 5000;
