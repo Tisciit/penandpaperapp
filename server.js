@@ -4,6 +4,7 @@ const ioSocket = require("socket.io")(server);
 const fs = require("fs");
 
 const chatHistory = [];
+let currentSong = "./sound/beat.mp3";
 
 ioSocket.on("connection", client => {
   //#region Command Variables
@@ -14,6 +15,7 @@ ioSocket.on("connection", client => {
    */
   const CHAT = "CHAT";
   const C_NAME = "/NAME";
+  const AUDIO = "AUDIO";
   //#endregion
 
   //#region Events for "/" commands
@@ -31,6 +33,12 @@ ioSocket.on("connection", client => {
 
     ioSocket.emit(CHAT, data);
   });
+
+  client.on("GM_CHANGE_SONG", (newSong) => {
+    console.log("GM CHANGED SONG TO " + newSong);
+    currentSong = `./sound/${newSong}.mp3`;
+    ioSocket.emit("AUDIO", newSong);
+  });
 });
 
 app.get("/", (req, res) => {
@@ -38,7 +46,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/audio", (req, res) => {
-  const src = fs.createReadStream("./sound/beat.mp3");
+  const src = fs.createReadStream(currentSong);
   src.pipe(res);
 });
 
