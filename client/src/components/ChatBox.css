@@ -1,28 +1,44 @@
 .ChatWrapper {
-    padding: .5rem;
-    border-radius: 5px;
-    border: 1px solid wheat;
-    width: 50rem;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid wheat;
+  width: 50rem;
 }
 
 .ChatWrapper .Chathistory {
-    max-height: 20rem;
-    overflow-y: scroll;
+  max-height: 20rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
-.ChatWrapper .Chathistory p{
-    margin: 0;
+
+::-webkit-scrollbar {
+  width: 1rem;
+  border-radius: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #322834;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e8e8e8;
+}
+
+.ChatWrapper .Chathistory p {
+  margin: 0;
 }
 
 .ChatWrapper input {
-    width: 80%;
+  width: 80%;
 }
 
 .ChatWrapper button {
-    border: none;
-    width: 5rem;
-    height: 2rem;
-    background: #322834;
-    color: #E8E8E8;
-    border: 1px solid #E8E8E8;
-    border-radius: 5px;
+  border: none;
+  width: 5rem;
+  height: 2rem;
+  background: #322834;
+  color: #e8e8e8;
+  border: 1px solid #e8e8e8;
+  border-radius: 5px;
 }
