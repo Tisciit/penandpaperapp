@@ -6,7 +6,6 @@
 }
 
 .ChatWrapper .Chathistory {
-    font-size: 1em;
     max-height: 20rem;
     overflow-y: scroll;
 }
