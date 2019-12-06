@@ -29,14 +29,23 @@
   margin: 0;
 }
 
+.ChatWrapper div {
+  margin: 0.5rem 0;
+}
+
 .ChatWrapper input {
   width: 80%;
+  height: 2rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 1.5rem;
 }
 
 .ChatWrapper button {
   border: none;
   width: 5rem;
   height: 2rem;
+  margin: 0 0.5rem;
   background: #322834;
   color: #e8e8e8;
   border: 1px solid #e8e8e8;
