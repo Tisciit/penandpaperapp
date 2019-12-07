@@ -17,8 +17,18 @@ export const AudioPlayer = () => {
       setAudioName(track);
       
     });
+
+    function onAudioEnded() {
+      //When Audio ends, restart for infinite loop :)
+      console.log("AUDIO ENDED");
+      setAudio(new Audio(audioURL));
+    }
+
+    audio.addEventListener("ended", onAudioEnded)
+
     return () => {
       unsubAudio();
+      audio.removeEventListener("ended", onAudioEnded);
     }
   }, [audio])
 
