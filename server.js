@@ -34,7 +34,7 @@ ioSocket.on("connection", client => {
     ioSocket.emit(CHAT, data);
   });
 
-  client.on("GM_CHANGE_SONG", (newSong) => {
+  client.on("GM_CHANGE_SONG", newSong => {
     console.log("GM CHANGED SONG TO " + newSong);
     currentSong = `./sound/${newSong}.mp3`;
     ioSocket.emit("AUDIO", newSong);
@@ -46,8 +46,12 @@ app.get("/", (req, res) => {
 });
 
 app.get("/audio", (req, res) => {
-  const src = fs.createReadStream(currentSong);
-  src.pipe(res);
+  if (fs.existsSync(currentSong)) {
+    const src = fs.createReadStream(currentSong);
+    src.pipe(res);
+  } else {
+    //TODO: Set 500 header and send response;
+  }
 });
 
 const PORT = 5000;
