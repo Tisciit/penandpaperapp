@@ -25,9 +25,10 @@ ioSocket.on("connection", client => {
 
   client.on(EVENTS.NEW_CHAT_MESSAGE, message => {
     console.log(EVENTS.NEW_CHAT_MESSAGE);
-    const id = chatHistory.push({ client: client.id, message });
+    const time = new Date().getTime();
+    chatHistory.push({ client: client.id, time, message });
     const data = {
-      id,
+      id: client.id + time,
       user: client.name || client.id,
       message: message
     };

@@ -11,7 +11,7 @@ export const ChatBox = () => {
   //Reveice Chat events
 
   const refHistory = useRef(null);
-  const [message, setMessage] = useState("This is a test");
+  const [message, setMessage] = useState("Type the message");
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
