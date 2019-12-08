@@ -6,24 +6,25 @@ const fs = require("fs");
 const chatHistory = [];
 let currentSong = "./sound/beat.mp3";
 
-ioSocket.on("connection", client => {
-  //#region Command Variables
-  /**
-   * Write all in UPPERCASE
-   * Prefix "Commands" with C_
-   *
-   */
-  const CHAT = "CHAT";
-  const C_NAME = "/NAME";
-  const AUDIO = "AUDIO";
-  //#endregion
+const EVENTS = {
+  NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
+  COMMAND_NAME: "COMMAND_NAME",
+  AUDIO_CHANGE: "AUDIO_CHANGE",
+  ROLL_DICE: "ROLL_DICE"
+}
 
-  //#region Events for "/" commands
-  client.on(C_NAME, newName => {
+ioSocket.on("connection", client => {
+  //#region EVENTS for "/" commands
+
+  client.emit("CONNECTED", EVENTS);
+
+  client.on(EVENTS.COMMAND_NAME, newName => {
+    console.log(EVENTS.COMMAND_NAME);
     client.name = newName;
   });
 
-  client.on(CHAT, message => {
+  client.on(EVENTS.NEW_CHAT_MESSAGE, message => {
+    console.log(EVENTS.NEW_CHAT_MESSAGE);
     const id = chatHistory.push({ client: client.id, message });
     const data = {
       id,
@@ -31,18 +32,23 @@ ioSocket.on("connection", client => {
       message: message
     };
 
-    ioSocket.emit(CHAT, data);
+    ioSocket.emit(EVENTS.NEW_CHAT_MESSAGE, data);
   });
 
-  client.on("GM_CHANGE_SONG", newSong => {
+  client.on(EVENTS.AUDIO_CHANGE, newSong => {
     console.log("GM CHANGED SONG TO " + newSong);
     currentSong = `./sound/${newSong}.mp3`;
-    ioSocket.emit("AUDIO", newSong);
+    ioSocket.emit(EVENTS.AUDIO_CHANGE, newSong);
   });
 });
 
 app.get("/", (req, res) => {
   res.send(chatHistory);
+});
+
+app.get("/events", (req, res) => {
+  console.log(EVENTS);
+  res.send(JSON.stringify(EVENTS));
 });
 
 app.get("/audio", (req, res) => {
