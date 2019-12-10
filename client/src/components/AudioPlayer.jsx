@@ -4,6 +4,7 @@ import { subAudio, unsubAudio, audioURL, } from "../api";
 
 export const AudioPlayer = () => {
 
+  console.log(audioURL);
   const [audio, setAudio] = useState(new Audio(audioURL));
   const [audioName, setAudioName] = useState("Track!")
 

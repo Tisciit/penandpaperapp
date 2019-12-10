@@ -4,7 +4,7 @@ const ioSocket = require("socket.io")(server);
 const fs = require("fs");
 
 const chatHistory = [];
-let currentSong = "./sound/beat.mp3";
+let currentSong = "./sound/beat3.mp3";
 
 ioSocket.on("connection", client => {
   //#region Command Variables

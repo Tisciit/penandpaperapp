@@ -4,6 +4,7 @@ import "./App.css";
 import { ChatBox } from "./components/ChatBox";
 import { DiceArea } from "./components/DiceArea";
 import { AudioPlayer } from "./components/AudioPlayer";
+import { Tabletop } from "./components/Tabletop";
 
 function App() {
   return (
@@ -12,7 +13,8 @@ function App() {
         <div>Hello! Edit src/App.js!</div>
         <ChatBox />
         <DiceArea />
-        <AudioPlayer />
+        
+        <Tabletop rows="10" cols="20" radius="10" />
       </header>
     </div>
   );

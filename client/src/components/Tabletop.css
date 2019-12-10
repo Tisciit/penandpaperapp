@@ -1,0 +1,16 @@
+  .tabletopWrapper{
+      width: 80%;
+      height: 30rem;
+      background: black;
+      overflow: hidden;
+  }
+    
+  polygon {
+    fill: #cccccc;
+    stroke-width: .1;
+    stroke: black;
+  }
+
+  polygon:hover {
+      fill: green;
+  }
