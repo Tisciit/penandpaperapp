@@ -1,3 +1,4 @@
 node_modules/
-sound/beat2.mp3
-sound/beat3.mp3
+
+# Provide sounds yourself by creating the directory and placing the sound files there or serve them any other way
+sound/

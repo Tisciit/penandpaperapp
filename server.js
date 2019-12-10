@@ -6,38 +6,40 @@ const fs = require("fs");
 const chatHistory = [];
 let currentSong = "./sound/beat3.mp3";
 
-ioSocket.on("connection", client => {
-  //#region Command Variables
-  /**
-   * Write all in UPPERCASE
-   * Prefix "Commands" with C_
-   *
-   */
-  const CHAT = "CHAT";
-  const C_NAME = "/NAME";
-  const AUDIO = "AUDIO";
-  //#endregion
+const EVENTS = {
+  NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
+  COMMAND_NAME: "COMMAND_NAME",
+  AUDIO_CHANGE: "AUDIO_CHANGE",
+  ROLL_DICE: "ROLL_DICE"
+}
 
-  //#region Events for "/" commands
-  client.on(C_NAME, newName => {
+ioSocket.on("connection", client => {
+  //#region EVENTS for "/" commands
+
+  client.emit("CONNECTED", EVENTS);
+
+  client.on(EVENTS.COMMAND_NAME, newName => {
+    console.log(EVENTS.COMMAND_NAME);
     client.name = newName;
   });
 
-  client.on(CHAT, message => {
-    const id = chatHistory.push({ client: client.id, message });
+  client.on(EVENTS.NEW_CHAT_MESSAGE, message => {
+    console.log(EVENTS.NEW_CHAT_MESSAGE);
+    const time = new Date().getTime();
+    chatHistory.push({ client: client.id, time, message });
     const data = {
-      id,
+      id: client.id + time,
       user: client.name || client.id,
       message: message
     };
 
-    ioSocket.emit(CHAT, data);
+    ioSocket.emit(EVENTS.NEW_CHAT_MESSAGE, data);
   });
 
-  client.on("GM_CHANGE_SONG", (newSong) => {
+  client.on(EVENTS.AUDIO_CHANGE, newSong => {
     console.log("GM CHANGED SONG TO " + newSong);
     currentSong = `./sound/${newSong}.mp3`;
-    ioSocket.emit("AUDIO", newSong);
+    ioSocket.emit(EVENTS.AUDIO_CHANGE, newSong);
   });
 });
 
@@ -45,9 +47,18 @@ app.get("/", (req, res) => {
   res.send(chatHistory);
 });
 
+app.get("/events", (req, res) => {
+  console.log(EVENTS);
+  res.send(JSON.stringify(EVENTS));
+});
+
 app.get("/audio", (req, res) => {
-  const src = fs.createReadStream(currentSong);
-  src.pipe(res);
+  if (fs.existsSync(currentSong)) {
+    const src = fs.createReadStream(currentSong);
+    src.pipe(res);
+  } else {
+    //TODO: Set 500 header and send response;
+  }
 });
 
 const PORT = 5000;
