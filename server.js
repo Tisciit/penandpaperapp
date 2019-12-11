@@ -11,7 +11,7 @@ const EVENTS = {
   COMMAND_NAME: "COMMAND_NAME",
   AUDIO_CHANGE: "AUDIO_CHANGE",
   ROLL_DICE: "ROLL_DICE"
-}
+};
 
 ioSocket.on("connection", client => {
   //#region EVENTS for "/" commands

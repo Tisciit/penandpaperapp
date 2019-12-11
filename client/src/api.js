@@ -2,11 +2,11 @@ import io from "socket.io-client";
 const socket = io(":5000");
 
 const EVENTS = {
-    NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
-    COMMAND_NAME: "COMMAND_NAME",
-    AUDIO_CHANGE: "AUDIO_CHANGE",
-    ROLL_DICE: "ROLL_DICE"
-  }
+  NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
+  COMMAND_NAME: "COMMAND_NAME",
+  AUDIO_CHANGE: "AUDIO_CHANGE",
+  ROLL_DICE: "ROLL_DICE"
+};
 
 export const subscribeChat = cb => {
   socket.on(EVENTS.NEW_CHAT_MESSAGE, data => cb(data));

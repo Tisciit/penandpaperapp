@@ -13,8 +13,8 @@ function App() {
         <div>Hello! Edit src/App.js!</div>
         <ChatBox />
         <DiceArea />
-        
-        <Tabletop rows="10" cols="20" radius="10" />
+
+        <Tabletop rows="6" cols="20" />
       </header>
     </div>
   );

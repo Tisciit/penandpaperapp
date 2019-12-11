@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { subscribeChat, unsubscribeChat, sendChat, changeName, gm_Change_song } from "../api";
+import {
+  subscribeChat,
+  unsubscribeChat,
+  sendChat,
+  changeName,
+  gm_Change_song
+} from "../api";
 import "./ChatBox.css";
 
 const scrollToBottom = obj => obj.scrollTo(0, obj.scrollHeight);
@@ -51,7 +57,6 @@ export const ChatBox = () => {
           console.log("Changing song");
           gm_Change_song(split[1]);
           break;
-
       }
     } else {
       sendChat(message);
