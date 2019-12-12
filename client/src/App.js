@@ -10,11 +10,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <div>Hello! Edit src/App.js!</div>
         <ChatBox />
         <DiceArea />
 
-        <Tabletop rows="6" cols="20" />
+        <Tabletop rows="100" cols="100" />
       </header>
     </div>
   );
