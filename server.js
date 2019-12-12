@@ -41,6 +41,17 @@ ioSocket.on("connection", client => {
     currentSong = `./sound/${newSong}.mp3`;
     ioSocket.emit(EVENTS.AUDIO_CHANGE, newSong);
   });
+
+  client.on(EVENTS.ROLL_DICE, (diceString, options) => {
+    const ROLLTOOPTIONS = {
+      EVERYONE: 1,
+      SELF: 2,
+      GM: 3
+    }
+
+    const rollTo = options.rollTo || ROLLTOOPTIONS.EVERYONE;
+
+  });
 });
 
 app.get("/", (req, res) => {
