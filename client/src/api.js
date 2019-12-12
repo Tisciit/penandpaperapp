@@ -37,3 +37,15 @@ export const unsubAudio = () => {
 export const gm_Change_song = newSong => {
   socket.emit(EVENTS.AUDIO_CHANGE, newSong);
 };
+
+export const subscribeDice = cb => {
+  socket.on(EVENTS.ROLL_DICE, cb());
+};
+
+export const unsubscribeDice = () => {
+  socket.off(EVENTS.ROLL_DICE);
+};
+
+export const rollDice = (diceString, options) => {
+  socket.emit(EVENTS.ROLL_DICE, diceString, options);
+};
