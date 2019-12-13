@@ -11,13 +11,9 @@ export const storeShape = (strokeWeight, strokeColor, fillColor, points) => {
         b: strokeColor.b || 0
       }
     },
-    shape_close: fillColor & true, //If fillColor is provided, close the Shape
+    shape_close: fillColor ? true : false, //If fillColor is provided, close the Shape
     fill: {
-      color: {
-        r: fillColor.r || 0,
-        g: fillColor.g || 0,
-        b: fillColor.b || 0
-      }
+      color: fillColor,
     },
     points: points
   };

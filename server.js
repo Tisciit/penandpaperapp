@@ -49,16 +49,16 @@ ioSocket.on("connection", client => {
       EVERYONE: 1,
       SELF: 2,
       GM: 3
-    }
+    };
 
     const rollTo = options.rollTo || ROLLTOOPTIONS.EVERYONE;
-
   });
 
-  client.on(EVENTS.CANVAS, (object) => {
+  client.on(EVENTS.CANVAS, object => {
     console.log(EVENTS.CANVAS);
-    drawing.push([...object]);
-    ioSocket.emit(EVENTS.CANVAS, [...object]);
+    console.log(object);
+    drawing.push(object);
+    ioSocket.emit(EVENTS.CANVAS, object);
   });
 });
 
