@@ -10,8 +10,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <ChatBox />
-        <DiceArea />
+        {/* <ChatBox />
+        <DiceArea /> */}
 
         <Tabletop rows="100" cols="100" />
       </header>

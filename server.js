@@ -4,19 +4,21 @@ const ioSocket = require("socket.io")(server);
 const fs = require("fs");
 
 const chatHistory = [];
+const drawing = [];
 let currentSong = "./sound/beat3.mp3";
 
 const EVENTS = {
   NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
   COMMAND_NAME: "COMMAND_NAME",
   AUDIO_CHANGE: "AUDIO_CHANGE",
-  ROLL_DICE: "ROLL_DICE"
+  ROLL_DICE: "ROLL_DICE",
+  CANVAS: "CANVAS"
 };
 
 ioSocket.on("connection", client => {
   //#region EVENTS for "/" commands
 
-  client.emit("CONNECTED", EVENTS);
+  // client.emit(EVENTS.CANVAS, drawing);
 
   client.on(EVENTS.COMMAND_NAME, newName => {
     console.log(EVENTS.COMMAND_NAME);
@@ -51,6 +53,12 @@ ioSocket.on("connection", client => {
 
     const rollTo = options.rollTo || ROLLTOOPTIONS.EVERYONE;
 
+  });
+
+  client.on(EVENTS.CANVAS, (object) => {
+    console.log(EVENTS.CANVAS);
+    drawing.push([...object]);
+    ioSocket.emit(EVENTS.CANVAS, [...object]);
   });
 });
 

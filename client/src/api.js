@@ -5,7 +5,8 @@ const EVENTS = {
   NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
   COMMAND_NAME: "COMMAND_NAME",
   AUDIO_CHANGE: "AUDIO_CHANGE",
-  ROLL_DICE: "ROLL_DICE"
+  ROLL_DICE: "ROLL_DICE",
+  CANVAS: "CANVAS"
 };
 
 export const subscribeChat = cb => {
@@ -48,4 +49,19 @@ export const unsubscribeDice = () => {
 
 export const rollDice = (diceString, options) => {
   socket.emit(EVENTS.ROLL_DICE, diceString, options);
+};
+
+export const subscribeCanvas = cb => {
+  socket.on(EVENTS.CANVAS, data => {
+    console.log("CANVAS");
+    cb(data);
+  });
+};
+
+export const unsubscribeCanvas = () => {
+  socket.off(EVENTS.CANVAS);
+};
+
+export const updateCanvas = obj => {
+  socket.emit(EVENTS.CANVAS, obj);
 };
