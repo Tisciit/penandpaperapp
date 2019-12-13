@@ -51,6 +51,14 @@ polygon:hover {
   cursor: default;
 }
 
+.hidden {
+  display: none;
+}
+
 .cursorMove {
   cursor: move;
+}
+
+canvas {
+  pointer-events: none;
 }
