@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import P5Wrapper from "react-p5-wrapper";
-import { subscribeCanvas, unsubscribeCanvas, updateCanvas } from "../api";
-import { storeShape, storeRectangle, storeLine, storeEllipse } from "../p5api";
+import {
+  subscribeCanvas,
+  unsubscribeCanvas,
+  updateCanvas,
+  getCanvas
+} from "../api";
+import {
+  storeShape /*, storeRectangle, storeLine, storeEllipse*/
+} from "../p5api";
 import "./Tabletop.css";
 
 export const Tabletop = props => {
@@ -25,6 +32,11 @@ export const Tabletop = props => {
       let tempLayer;
       //#endregion
 
+      //#region OFFSETS WHEN MOVING THE CANVAS
+      let xOff = 0;
+      let yOff = 0;
+      //#endregion
+
       //#region VARIABLES WHICH HOLD PROPS
       let mode;
       let zoom;
@@ -34,7 +46,6 @@ export const Tabletop = props => {
       const RADIUS = 50;
 
       p.setup = () => {
-        console.log("SETUP");
         const COLS = props.COLS || 160;
         const ROWS = props.ROWS || 90;
         const width = RADIUS * COLS;
@@ -88,14 +99,14 @@ export const Tabletop = props => {
         (function() {
           if (!drawingLayer) return;
           drawingLayer.clear();
-          
+
           for (let obj of drawings) {
             if (obj === undefined) continue;
             const { type } = obj;
 
             drawingLayer.push();
             switch (type) {
-              case "SHAPE": {
+              case "SHAPE":
                 const { stroke, fill, points, shape_close } = obj;
                 drawingLayer.beginShape();
 
@@ -113,32 +124,23 @@ export const Tabletop = props => {
 
                 for (let p of points) {
                   drawingLayer.vertex(p.x, p.y);
-                  console.log(p);
                 }
                 if (shape_close) drawingLayer.endShape(drawingLayer.CLOSE);
                 else drawingLayer.endShape();
                 break;
-              }
-              // case "VERTEX":
-              //   drawingLayer.vertex(x, y);
-              //   break;
-              // case "BEGIN":
-              //   const { strokeColor, strokeWidth } = obj;
-              //   drawingLayer.beginShape();
-              //   drawingLayer.stroke(
-              //     drawingLayer.color(
-              //       strokeColor.r,
-              //       strokeColor.g,
-              //       strokeColor.b
-              //     )
-              //   );
-              //   drawingLayer.strokeWeight(strokeWidth);
-              //   drawingLayer.vertex(x, y);
-              //   break;
-              // case "END":
-              //   drawingLayer.vertex(x, y);
-              //   drawingLayer.endShape();
-              //   break;
+
+              case "RECTANGLE":
+                break;
+
+              case "ELLIPSE":
+                break;
+
+              case "LINE":
+                break;
+
+              default:
+                console.error(`Unrecognized shape ${type}`);
+                break;
             }
             drawingLayer.pop();
           }
@@ -151,26 +153,41 @@ export const Tabletop = props => {
         const w = p.width * zoom;
         const h = p.height * zoom;
 
-        p.image(backgroundLayer, 0, 0, w, h);
-        p.image(drawingLayer, 0, 0, w, h);
-        p.image(tempLayer, 0, 0, w, h);
+        p.image(backgroundLayer, xOff, yOff, w, h);
+        p.image(drawingLayer, xOff, yOff, w, h);
+        p.image(tempLayer, xOff, yOff, w, h);
       };
 
       let points = [];
+      let startedMovingAt = {};
       p.mouseDragged = function() {
+        const x = p.mouseX / zoom;
+        const y = p.mouseY / zoom;
         switch (mode) {
           case MODES.DRAW:
-            const x = p.mouseX / zoom;
-            const y = p.mouseY / zoom;
-
             if (x < 0 || y < 0) return;
 
             points.push({
-              x: x,
-              y: y,
+              x: x - xOff,
+              y: y - yOff
             });
 
-            tempLayer.ellipse(x, y, 5);
+            tempLayer.ellipse(x - xOff, y - yOff, 5);
+            break;
+
+          case MODES.DRAG:
+            if (startedMovingAt.x) {
+              xOff += x - startedMovingAt.x;
+            }
+            if (startedMovingAt.y) {
+              yOff += y - startedMovingAt.y;
+            }
+
+            startedMovingAt.x = x;
+            startedMovingAt.y = y;
+            break;
+
+          default:
             break;
         }
       };
@@ -184,9 +201,17 @@ export const Tabletop = props => {
           points = [];
           tempLayer.clear();
         }
+
+        startedMovingAt = {};
       };
     };
   }
+
+  useEffect(() => {
+    getCanvas(drawings => {
+      setDrawings(drawings);
+    });
+  }, []);
 
   useEffect(() => {
     subscribeCanvas(drawing => {
@@ -194,7 +219,6 @@ export const Tabletop = props => {
     });
 
     return () => {
-      console.log("UNSUBBED");
       unsubscribeCanvas();
     };
   }, [drawings]);

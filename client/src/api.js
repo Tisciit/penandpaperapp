@@ -6,7 +6,8 @@ const EVENTS = {
   COMMAND_NAME: "COMMAND_NAME",
   AUDIO_CHANGE: "AUDIO_CHANGE",
   ROLL_DICE: "ROLL_DICE",
-  CANVAS: "CANVAS"
+  CANVAS: "CANVAS",
+  GETCANVAS: "GETCANVAS"
 };
 
 export const subscribeChat = cb => {
@@ -64,4 +65,12 @@ export const unsubscribeCanvas = () => {
 
 export const updateCanvas = obj => {
   socket.emit(EVENTS.CANVAS, obj);
+};
+
+export const getCanvas = cb => {
+  socket.on(EVENTS.GETCANVAS, data => {
+    cb(data);
+    socket.off(EVENTS.GETCANVAS);
+  });
+  socket.emit(EVENTS.GETCANVAS);
 };

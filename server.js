@@ -12,7 +12,8 @@ const EVENTS = {
   COMMAND_NAME: "COMMAND_NAME",
   AUDIO_CHANGE: "AUDIO_CHANGE",
   ROLL_DICE: "ROLL_DICE",
-  CANVAS: "CANVAS"
+  CANVAS: "CANVAS",
+  GETCANVAS: "GETCANVAS"
 };
 
 ioSocket.on("connection", client => {
@@ -56,9 +57,13 @@ ioSocket.on("connection", client => {
 
   client.on(EVENTS.CANVAS, object => {
     console.log(EVENTS.CANVAS);
-    console.log(object);
     drawing.push(object);
     ioSocket.emit(EVENTS.CANVAS, object);
+  });
+
+  client.on(EVENTS.GETCANVAS, () => {
+    console.log(`Client ${client.id} requested existing drawings`);
+    client.emit(EVENTS.GETCANVAS, drawing);
   });
 });
 
