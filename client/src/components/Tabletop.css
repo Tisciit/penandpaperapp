@@ -20,7 +20,7 @@
   background: purple;
 }
 
-.svgContainer {
+.sketchContainer {
   position: relative;
   margin: 1rem;
   border: 0.2rem solid white;
@@ -29,36 +29,10 @@
   z-index: 0;
 }
 
-/*Stack all svgs on top of each other*/
-.svgContainer svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-}
-
-polygon {
-  fill: #cccccc;
-  stroke-width: 0.1;
-  stroke: black;
-}
-
-polygon:hover {
-  fill: green;
-}
-
 .cursorDefault {
   cursor: default;
 }
 
-.hidden {
-  display: none;
-}
-
 .cursorMove {
   cursor: move;
-}
-
-canvas {
-  pointer-events: none;
 }
