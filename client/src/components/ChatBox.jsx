@@ -9,9 +9,6 @@ import {
 import "./ChatBox.css";
 
 const scrollToBottom = obj => obj.scrollTo(0, obj.scrollHeight);
-const isScrolledBottom = obj => {
-  return obj.scrollHeight - obj.scrollTop === obj.clientHeight;
-};
 
 export const ChatBox = () => {
   //Reveice Chat events
@@ -41,7 +38,7 @@ export const ChatBox = () => {
   }, [history]);
 
   const sendMsg = () => {
-    if (message == "") {
+    if (message === "") {
       return;
     }
 
@@ -56,6 +53,10 @@ export const ChatBox = () => {
         case "gmcs":
           console.log("Changing song");
           gm_Change_song(split[1]);
+          break;
+
+        default:
+          console.log("Command not recognized");
           break;
       }
     } else {

@@ -42,8 +42,11 @@ export const Tabletop = props => {
       case MODES.DRAG:
         refGrid.current.classList.add("cursorMove");
         break;
+
+      default:
+        break;
     }
-  }, [mode]);
+  }, [mode, MODES.DRAG, MODES.SELECT]);
   //Thanks to https://stackoverflow.com/a/56823542/12512574 for basically providing the SVG Hex Layout creation script!
   //Create Hex Grid on mount
   useEffect(() => {
@@ -99,7 +102,7 @@ export const Tabletop = props => {
       parent.appendChild(elmt);
       return elmt;
     }
-  }, []);
+  }, [props.cols, props.rows]);
   //
 
   const SVGMOUSEDOWN = e => {

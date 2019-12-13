@@ -3,7 +3,7 @@ import React from "react";
 import "./App.css";
 import { ChatBox } from "./components/ChatBox";
 import { DiceArea } from "./components/DiceArea";
-import { AudioPlayer } from "./components/AudioPlayer";
+//import { AudioPlayer } from "./components/AudioPlayer";
 import { Tabletop } from "./components/Tabletop";
 
 function App() {
