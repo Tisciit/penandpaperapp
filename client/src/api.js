@@ -10,48 +10,72 @@ const EVENTS = {
   GETCANVAS: "GETCANVAS"
 };
 
+//#region  Helper Functions
+//-----------------------------------------------
+const unsubscribeEvent = (event, callback) => {
+  if (callback) {
+    //Unsubscribe only from given callback
+    socket.off(event, callback);
+  } else {
+    //Unsubscribe from all Callbacks
+    socket.off(event);
+  }
+};
+//-----------------------------------------------
+//#endregion
+
+//#region  Chat
+//-----------------------------------------------
 export const subscribeChat = cb => {
   socket.on(EVENTS.NEW_CHAT_MESSAGE, data => cb(data));
 };
 
-export const unsubscribeChat = () => {
-  socket.off(EVENTS.NEW_CHAT_MESSAGE);
+export const unsubscribeChat = cb => {
+  unsubscribeEvent(EVENTS.NEW_CHAT_MESSAGE, cb);
 };
 
 export const sendChat = message => {
   socket.emit(EVENTS.NEW_CHAT_MESSAGE, message);
 };
+//-----------------------------------------------
+//#endregion
 
-export const changeName = newName => {
-  socket.emit(EVENTS.COMMAND_NAME, newName);
-};
-
+//#region  Audio
+//-----------------------------------------------
 export const audioURL = "http://" + window.location.hostname + ":5000/audio";
 
-export const subAudio = cb => {
+export const subscribeAudio = cb => {
   socket.on(EVENTS.AUDIO_CHANGE, data => cb(data));
 };
 
-export const unsubAudio = () => {
-  socket.off(EVENTS.AUDIO_CHANGE);
+export const unsubscribeAudio = cb => {
+  unsubscribeEvent(EVENTS.AUDIO_CHANGE, cb);
 };
 
 export const gm_Change_song = newSong => {
   socket.emit(EVENTS.AUDIO_CHANGE, newSong);
 };
+//-----------------------------------------------
+//#endregion
 
+//#region  Dice
+//-----------------------------------------------
 export const subscribeDice = cb => {
-  socket.on(EVENTS.ROLL_DICE, cb());
+  socket.on(EVENTS.ROLL_DICE, data => cb(data));
 };
 
-export const unsubscribeDice = () => {
-  socket.off(EVENTS.ROLL_DICE);
+export const unsubscribeDice = cb => {
+  unsubscribeEvent(EVENTS.ROLL_DICE, cb);
 };
 
-export const rollDice = (diceString, options) => {
-  socket.emit(EVENTS.ROLL_DICE, diceString, options);
+export const rollDice = diceString => {
+  socket.emit(EVENTS.ROLL_DICE, diceString);
 };
+//-----------------------------------------------
+//#endregion
 
+//#region  Canvas
+//-----------------------------------------------
 export const subscribeCanvas = cb => {
   socket.on(EVENTS.CANVAS, data => {
     console.log("CANVAS");
@@ -59,8 +83,8 @@ export const subscribeCanvas = cb => {
   });
 };
 
-export const unsubscribeCanvas = () => {
-  socket.off(EVENTS.CANVAS);
+export const unsubscribeCanvas = cb => {
+  unsubscribeEvent(EVENTS.CANVAS, cb);
 };
 
 export const updateCanvas = obj => {
@@ -74,3 +98,13 @@ export const getCanvas = cb => {
   });
   socket.emit(EVENTS.GETCANVAS);
 };
+//-----------------------------------------------
+//#endregion
+
+//#region  Other 
+//-----------------------------------------------
+export const changeName = newName => {
+  socket.emit(EVENTS.COMMAND_NAME, newName);
+};
+//-----------------------------------------------
+//#endregion
