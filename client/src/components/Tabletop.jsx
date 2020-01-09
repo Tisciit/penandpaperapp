@@ -87,7 +87,7 @@ export const Tabletop = props => {
         drawingLayer.noFill();
         drawingLayer.frameRate(0);
         tempLayer = p.createGraphics(width, height);
-        p.frameRate(20);
+        p.frameRate(30);
       };
 
       p.myCustomRedrawAccordingToNewPropsHandler = props => {
@@ -148,6 +148,7 @@ export const Tabletop = props => {
         //#endregion
       };
 
+      const points = [];
       p.draw = () => {
         p.clear();
         const w = p.width * zoom;
@@ -156,53 +157,40 @@ export const Tabletop = props => {
         p.image(backgroundLayer, xOff, yOff, w, h);
         p.image(drawingLayer, xOff, yOff, w, h);
         p.image(tempLayer, xOff, yOff, w, h);
-      };
 
-      let points = [];
-      let startedMovingAt = {};
-      p.mouseDragged = function() {
         const x = p.mouseX / zoom;
         const y = p.mouseY / zoom;
+        const prevX = p.pmouseX / zoom;
+        const prevY = p.pmouseY / zoom;
+
         switch (mode) {
           case MODES.DRAW:
-            if (x < 0 || y < 0) return;
+            if (p.mouseIsPressed) {
+              //If drawing off canvas return
+              if (x < 0 || y < 0) return;
+              points.push({ x: x - xOff, y: y - yOff });
+              tempLayer.ellipse(x - xOff, y - yOff, 5);
+            } else {
+              if (points.length > 0) {
+                const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
+                updateCanvas(obj);
+                points.splice(0, points.length);
+                tempLayer.clear();
+              }
+            }
 
-            points.push({
-              x: x - xOff,
-              y: y - yOff
-            });
-
-            tempLayer.ellipse(x - xOff, y - yOff, 5);
             break;
 
           case MODES.DRAG:
-            if (startedMovingAt.x) {
-              xOff += x - startedMovingAt.x;
+            if (p.mouseIsPressed) {
+              xOff += x - prevX;
+              yOff += y - prevY;
             }
-            if (startedMovingAt.y) {
-              yOff += y - startedMovingAt.y;
-            }
-
-            startedMovingAt.x = x;
-            startedMovingAt.y = y;
             break;
 
           default:
             break;
         }
-      };
-
-      p.mouseReleased = function() {
-        //TODO: https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
-
-        if (points.length > 3) {
-          const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-          updateCanvas(obj);
-          points = [];
-          tempLayer.clear();
-        }
-
-        startedMovingAt = {};
       };
     };
   }
