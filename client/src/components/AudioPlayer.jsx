@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { subAudio, unsubAudio, audioURL } from "../api";
+import { subscribeAudio, unsubscribeAudio, audioURL } from "../api";
 
 export const AudioPlayer = () => {
   const [audio, setAudio] = useState(new Audio(audioURL));
@@ -8,7 +8,7 @@ export const AudioPlayer = () => {
 
   useEffect(() => {
     audio.play();
-    subAudio(track => {
+    subscribeAudio(track => {
       audio.pause();
       setAudio(new Audio(audioURL));
       setAudioName(track);
@@ -22,7 +22,7 @@ export const AudioPlayer = () => {
     audio.addEventListener("ended", onAudioEnded);
 
     return () => {
-      unsubAudio();
+      unsubscribeAudio();
       audio.removeEventListener("ended", onAudioEnded);
     };
   }, [audio]);
