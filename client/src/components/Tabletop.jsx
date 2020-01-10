@@ -62,17 +62,13 @@ export const Tabletop = props => {
           i++;
           const o = i % 2 === 0 ? offset : 0;
           for (let x = o; x < width; x += 3 * RADIUS) {
-            backgroundLayer.fill(backgroundLayer.color(255, 0, 0));
-            backgroundLayer.noStroke();
-            backgroundLayer.strokeWeight(1);
-            backgroundLayer.ellipse(x, y, 2);
             calculateEdges(x, y);
           }
         }
 
         function calculateEdges(x, y) {
           backgroundLayer.noFill();
-          backgroundLayer.stroke(255);
+          backgroundLayer.stroke(255, 255, 10);
           backgroundLayer.beginShape();
           for (let a = 0; a < 6; a++) {
             let x_ = x + RADIUS * Math.cos((a * Math.PI) / 3);
@@ -85,8 +81,9 @@ export const Tabletop = props => {
         //#endregion
         drawingLayer = p.createGraphics(width, height);
         drawingLayer.noFill();
-        drawingLayer.frameRate(0);
+        drawingLayer.noLoop();
         tempLayer = p.createGraphics(width, height);
+        tempLayer.noLoop();
         p.frameRate(30);
       };
 
@@ -188,6 +185,10 @@ export const Tabletop = props => {
             }
             break;
 
+          case MODES.SELECT:
+            //TODO: SELECTION MECHANISM
+            break;
+
           default:
             break;
         }
@@ -202,8 +203,13 @@ export const Tabletop = props => {
   }, []);
 
   useEffect(() => {
-    subscribeCanvas(drawing => {
+    function updateDrawingState(drawing) {
       setDrawings([...drawings, drawing]);
+    }
+
+    subscribeCanvas(updateDrawingState);
+    subscribeCanvas(() => {
+      console.log("YAY");
     });
 
     return () => {
