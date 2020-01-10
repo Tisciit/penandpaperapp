@@ -27,11 +27,11 @@ const unsubscribeEvent = (event, callback) => {
 //#region  Chat
 //-----------------------------------------------
 export const subscribeChat = cb => {
-  socket.on(EVENTS.NEW_CHAT_MESSAGE, data => cb(data));
+  socket.once(EVENTS.NEW_CHAT_MESSAGE, data => cb(data));
 };
 
-export const unsubscribeChat = cb => {
-  unsubscribeEvent(EVENTS.NEW_CHAT_MESSAGE, cb);
+export const unsubscribeChat = () => {
+  unsubscribeEvent(EVENTS.NEW_CHAT_MESSAGE);
 };
 
 export const sendChat = message => {
@@ -45,11 +45,11 @@ export const sendChat = message => {
 export const audioURL = "http://" + window.location.hostname + ":5000/audio";
 
 export const subscribeAudio = cb => {
-  socket.on(EVENTS.AUDIO_CHANGE, data => cb(data));
+  socket.once(EVENTS.AUDIO_CHANGE, data => cb(data));
 };
 
-export const unsubscribeAudio = cb => {
-  unsubscribeEvent(EVENTS.AUDIO_CHANGE, cb);
+export const unsubscribeAudio = () => {
+  unsubscribeEvent(EVENTS.AUDIO_CHANGE);
 };
 
 export const gm_Change_song = newSong => {
@@ -61,11 +61,11 @@ export const gm_Change_song = newSong => {
 //#region  Dice
 //-----------------------------------------------
 export const subscribeDice = cb => {
-  socket.on(EVENTS.ROLL_DICE, data => cb(data));
+  socket.once(EVENTS.ROLL_DICE, data => cb(data));
 };
 
-export const unsubscribeDice = cb => {
-  unsubscribeEvent(EVENTS.ROLL_DICE, cb);
+export const unsubscribeDice = () => {
+  unsubscribeEvent(EVENTS.ROLL_DICE);
 };
 
 export const rollDice = diceString => {
@@ -77,14 +77,14 @@ export const rollDice = diceString => {
 //#region  Canvas
 //-----------------------------------------------
 export const subscribeCanvas = cb => {
-  socket.on(EVENTS.CANVAS, data => {
+  socket.once(EVENTS.CANVAS, data => {
     console.log("CANVAS");
     cb(data);
   });
 };
 
-export const unsubscribeCanvas = cb => {
-  unsubscribeEvent(EVENTS.CANVAS, cb);
+export const unsubscribeCanvas = () => {
+  unsubscribeEvent(EVENTS.CANVAS);
 };
 
 export const updateCanvas = obj => {
