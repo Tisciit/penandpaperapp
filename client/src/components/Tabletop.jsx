@@ -168,8 +168,8 @@ export const Tabletop = props => {
             if (p.mouseIsPressed) {
               //If drawing off canvas return
               if (x < 0 || y < 0) return;
-              points.push({ x: x - xOff, y: y - yOff });
-              tempLayer.ellipse(x - xOff, y - yOff, 5);
+              points.push({ x: x - xOff / zoom, y: y - yOff / zoom });
+              tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
             } else {
               if (points.length > 0) {
                 const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
@@ -254,7 +254,7 @@ export const Tabletop = props => {
         >
           +
         </button>
-        {mode}
+        {zoom}
       </div>
       <div className="sketchContainer">
         <P5Wrapper
