@@ -5,7 +5,7 @@ let remainingCards;
 
 exports.newDeck = () => {
   return new Promise((resolve, reject) => {
-    fetch("https://deckofcardsapi.com/api/deck/new/shuffle/")
+    fetch("https://deckofcardsapi.com/api/deck/new/shuffle/?jokers_enabled=true")
       .then(res => res.json())
       .then(json => {
         const { success, deck_id, remaining } = json;
