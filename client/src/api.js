@@ -9,7 +9,8 @@ const EVENTS = {
   CANVAS: "CANVAS",
   GETCANVAS: "GETCANVAS",
   REMOVECANVAS: "REMOVECANVAS",
-  DRAWCARD: "DRAW_CARD"
+  DRAWCARD: "DRAW_CARD",
+  UPDATETOKENORCARD: "UPDATE_TOKENCARD",
 };
 
 //#region  Helper Functions
@@ -78,14 +79,15 @@ export const rollDice = diceString => {
 
 //#region  Canvas
 //-----------------------------------------------
-export const subscribeCanvas = cb => {
-  socket.once(EVENTS.CANVAS, data => {
-    console.log("CANVAS");
-    cb(data);
-  });
+export const subscribeDrawings = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.CANVAS, data => cb(data));
+  } else {
+    socket.on(EVENTS.CANVAS, data => cb(data));
+  }
 };
 
-export const unsubscribeCanvas = () => {
+export const unsubscribeDrawings = () => {
   unsubscribeEvent(EVENTS.CANVAS);
 };
 
@@ -101,30 +103,52 @@ export const getCanvas = cb => {
   socket.emit(EVENTS.GETCANVAS);
 };
 
+export const updateTokenCard = elt => {
+  socket.emit(EVENTS.UPDATETOKENORCARD, elt)
+}
+
+export const subscribeTokenCard = (cb, once = false) => {
+  if(once) {
+    socket.once(EVENTS.UPDATETOKENORCARD, data => cb(data));
+  } else {
+    socket.on(EVENTS.UPDATETOKENORCARD, data => cb(data));
+  }
+}
+
 export const deleteDrawing = id => {
   socket.emit(EVENTS.REMOVECANVAS, id);
 };
 
-export const subscribeDeletions = cb => {
-  socket.once(EVENTS.REMOVECANVAS, data => cb(data));
+export const subscribeDeletions = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.REMOVECANVAS, data => cb(data));
+  } else {
+    socket.on(EVENTS.REMOVECANVAS, data => cb(data));
+  }
 };
 
 export const unsubscribeDeletions = cb => {
   unsubscribeEvent(EVENTS.REMOVECANVAS, cb);
-}
+};
 //-----------------------------------------------
 //#endregion
 
 //#region  Cards
 //-----------------------------------------------
-export const drawCard = (cb) => {
+export const drawCard = cb => {
   socket.emit(EVENTS.DRAWCARD);
 
-  socket.once(EVENTS.DRAWCARD, (data) => {
-    console.log(data);
-    cb(data);
-  })
+  subscribeCards(cb, true);
 };
+
+export const subscribeCards = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.DRAWCARD, data => cb(data));
+  } else {
+    socket.on(EVENTS.DRAWCARD, data => cb(data));
+  }
+};
+
 //-----------------------------------------------
 //#endregion
 

@@ -7,6 +7,11 @@ const deckapi = require("./deckofcardsapi");
 const chatHistory = [];
 const drawing = [];
 let drawingId = 1;
+
+const tokens = [];
+let tokenId = 1;
+const cards = [];
+let cardId = 1;
 let currentSong = "./sound/beat3.mp3";
 
 const EVENTS = {
@@ -17,7 +22,8 @@ const EVENTS = {
   CANVAS: "CANVAS",
   GETCANVAS: "GETCANVAS",
   REMOVECANVAS: "REMOVECANVAS",
-  DRAWCARD: "DRAW_CARD"
+  DRAWCARD: "DRAW_CARD",
+  UPDATETOKENORCARD: "UPDATE_TOKENCARD"
 };
 
 ioSocket.on("connection", client => {
@@ -78,7 +84,7 @@ ioSocket.on("connection", client => {
     const elt = drawing.find(elt => elt.id === id);
     if (elt) {
       const index = drawing.indexOf(elt);
-      const deleted = drawing.splice(index, 1);
+      drawing.splice(index, 1);
       console.log("Element has been deleted");
 
       ioSocket.emit(EVENTS.REMOVECANVAS, id);
@@ -88,12 +94,24 @@ ioSocket.on("connection", client => {
   client.on(EVENTS.DRAWCARD, () => {
     deckapi.drawCards(1).then(
       resolve => {
-        client.emit(EVENTS.DRAWCARD, resolve);
+        //Send Drawn Card to everyone :)
+        const card = Object.assign(resolve, { id: cardId++ });
+        cards.push(card);
+        ioSocket.emit(EVENTS.DRAWCARD, card);
       },
       reject => {
         console.log(reject);
       }
     );
+  });
+
+  client.on(EVENTS.UPDATETOKENORCARD, elt => {
+    if (elt.type === "CARD") {
+      const card = cards.find(c => c.id === elt.id);
+      card.x = elt.x;
+      card.y = elt.y;
+      ioSocket.emit(EVENTS.UPDATETOKENORCARD, card);
+    }
   });
 });
 

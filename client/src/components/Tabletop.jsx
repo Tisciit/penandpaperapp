@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import P5Wrapper from "react-p5-wrapper";
 import {
-  subscribeCanvas,
+  subscribeDrawings,
   updateCanvas,
   getCanvas,
   subscribeDeletions,
   deleteDrawing,
-  unsubscribeCanvas,
-  unsubscribeDeletions,
-  drawCard
+  drawCard,
+  subscribeCards,
+  updateTokenCard,
+  subscribeTokenCard
 } from "../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
 } from "../p5api";
 import "./Tabletop.css";
-
-import joker from "./tokens/card-joker.svg";
 
 export const Tabletop = props => {
   const MODES = {
@@ -27,16 +26,66 @@ export const Tabletop = props => {
 
   const [mode, setMode] = useState(MODES.SELECT);
   const [zoom, setZoom] = useState(1);
-  const [drawings, setDrawings] = useState([]);
   const [sketch] = useState(getSketch);
 
   function getSketch() {
     return function sketch(p) {
+      const getPositionedCanvas = (w, h) => {
+        const canvas = p.createGraphics(w, h);
+        canvas.noLoop();
+        return {
+          canvas: canvas,
+          width: w,
+          height: h,
+          x: 0,
+          y: 0
+        };
+      };
+
+      //#region Event subscriptions. These should not only fire once but continously
+      subscribeCards(card => {
+        console.log(card);
+        p.loadImage(card[0].image, data => {
+          //+1 So that Canvas has an odd with, making it easier to center
+          const c = getPositionedCanvas(100 * 0.72, 100);
+          c.canvas.image(data, 0, 0, c.width, c.height);
+          cards.push(c);
+        });
+      });
+
+      subscribeDrawings(data => {
+        console.log(drawings);
+        drawings.push(data);
+        drawDrawing(data);
+      });
+
+      subscribeDeletions(id => {
+        const elt = drawings.find(elt => elt.id === id);
+        if (elt) {
+          const index = drawings.indexOf(elt);
+          drawings.splice(index, 1);
+
+          drawingLayer.clear();
+          for (const drawing of drawings) {
+            drawDrawing(drawing);
+          }
+        }
+      });
+
+      subscribeTokenCard(data => {
+        if (data.type === "CARD") {
+          const card = cards.find(elt => elt.id === data.id);
+          card.x = data.x;
+          card.y = data.y;
+        }
+      });
+
+      //#endregion
+
       //#region LAYERS FOR THE CANVAS
       let backgroundLayer;
       let drawingLayer;
       let tempLayer;
-      let tokens = [];
       //#endregion
 
       //#region OFFSETS WHEN MOVING THE CANVAS
@@ -47,15 +96,18 @@ export const Tabletop = props => {
       //#region VARIABLES WHICH HOLD PROPS
       let mode;
       let zoom;
-      let drawings;
+      //#endregion
 
       //default Size for Tiles
-      const RADIUS = 60;
+      const RADIUS = 40;
 
-      //Point Buffer for Drawing
+      //Drawing Array & Point Buffer for Drawing
+      const drawings = [];
       const points = [];
+      const tokens = [];
+      const cards = [];
 
-      //contains selected drawing
+      //contains selection info
       const selection = {
         current: undefined,
         token: undefined
@@ -99,42 +151,27 @@ export const Tabletop = props => {
           backgroundLayer.endShape(p.CLOSE);
         }
         //#endregion
+
+        //#region set up DrawingLayer
         drawingLayer = p.createGraphics(width, height);
         drawingLayer.noFill();
         drawingLayer.noLoop();
         tempLayer = p.createGraphics(width, height);
         tempLayer.noLoop();
 
-        p.loadImage(joker, data => {
-          //+1 So that Canvas has an odd with, making it easier to center
-          const c = p.createGraphics(RADIUS * 1.5 + 1, RADIUS * 1.5 + 1);
-          c.noLoop();
-          c.image(data, 0, 0, c.width, c.height);
-          tokens.push({
-            canvas: c,
-            x: getNextAnchor(0, 0).x / 2,
-            y: getNextAnchor(0, 0).y / 2
-          });
+        //#endregion
+
+        getCanvas(drawings => {
+          drawings = drawings;
         });
+
         p.frameRate(30);
       };
 
       p.myCustomRedrawAccordingToNewPropsHandler = props => {
         mode = props.mode;
         zoom = props.zoom;
-        drawings = props.drawings;
         selection.current = undefined;
-
-        //#region REDRAW DRAWING LAYER WHEN PROPS CHANGE
-        (function() {
-          if (!drawingLayer) return;
-          drawingLayer.clear();
-
-          for (const drawing of drawings) {
-            drawDrawing(drawing);
-          }
-        })();
-        //#endregion
       };
 
       p.draw = () => {
@@ -146,13 +183,23 @@ export const Tabletop = props => {
         p.image(drawingLayer, xOff, yOff, w, h);
         p.image(tempLayer, xOff, yOff, w, h);
 
-        for (let token of tokens) {
+        for (const token of tokens) {
           p.image(
             token.canvas,
             token.x + xOff / zoom,
             token.y + yOff / zoom,
-            token.canvas.width * zoom,
-            token.canvas.height * zoom
+            token.width * zoom,
+            token.height * zoom
+          );
+        }
+
+        for (const card of cards) {
+          p.image(
+            card.canvas,
+            card.x + xOff / zoom,
+            card.y + yOff / zoom,
+            card.width * zoom,
+            card.height * zoom
           );
         }
 
@@ -208,27 +255,34 @@ export const Tabletop = props => {
 
           case MODES.DRAGELEMENTS:
             if (p.mouseIsPressed) {
-              if (!selection.token) {
-                const token = getToken(x, y);
-                if (token) {
-                  selection.token = token;
+              if (!selection.current) {
+                const elt = getTokenCard(x, y);
+                if (elt.type) {
+                  selection.current = elt;
                 }
               } else {
-                //token has been selected;
-                // selection.token.x += x - prevX;
-                // selection.token.y += y - prevY;
+                const { type, object } = selection.current;
+                //SNAP TO ANCHORS
+                switch (type) {
+                  case "TOKEN":
+                    const newPoint = getNextAnchor(x, y);
+                    object.x = newPoint.x - object.width / 2;
+                    object.y = newPoint.y - object.height / 2;
+                    updateTokenCard(Object.assign(object, { type: "TOKEN" }));
+                    break;
 
-                //OR SNAP
-                const newPoint = getNextAnchor(x, y);
+                  case "CARD":
+                    object.x += x - prevX;
+                    object.y += y - prevY;
+                    updateTokenCard(Object.assign(object, { type: "CARD" }));
+                    break;
 
-                selection.token.x =
-                  newPoint.x - selection.token.canvas.width / 2;
-                selection.token.y =
-                  newPoint.y - selection.token.canvas.height / 2;
+                  default:
+                    break;
+                }
               }
-            }
-            if (!p.mouseIsPressed) {
-              selection.token = undefined;
+            } else {
+              selection.current = undefined;
             }
             break;
 
@@ -245,23 +299,7 @@ export const Tabletop = props => {
               deleteDrawing(selection.current.id);
             } else if (e.keyCode === 68) {
               //Draw card
-              drawCard(card => {
-                console.log(card);
-                p.loadImage(card[0].image, data => {
-                  //+1 So that Canvas has an odd with, making it easier to center
-                  const c = p.createGraphics(
-                    RADIUS * 2 * 0.72 + 1,
-                    RADIUS * 2 + 1
-                  );
-                  c.noLoop();
-                  c.image(data, 0, 0, c.width, c.height);
-                  tokens.push({
-                    canvas: c,
-                    x: getNextAnchor(0, 0).x / 2,
-                    y: getNextAnchor(0, 0).y / 2
-                  });
-                });
-              });
+              drawCard(() => {});
             }
             break;
 
@@ -367,20 +405,40 @@ export const Tabletop = props => {
         }
       }
 
-      function getToken(x, y) {
+      function getTokenCard(x, y) {
+        const elt = {
+          type: undefined,
+          object: undefined
+        };
         for (const token of tokens) {
           if (
             x >= token.x &&
-            x <= token.x + token.canvas.width &&
+            x <= token.x + token.width &&
             y >= token.y &&
-            y <= token.y + token.canvas.height
+            y <= token.y + token.height
           ) {
             console.log("Clicked on Token!");
-            return token;
+            elt.type = "TOKEN";
+            elt.object = token;
+            return elt;
           }
         }
 
-        return undefined;
+        for (const card of cards) {
+          if (
+            x >= card.x &&
+            x <= card.x + card.width &&
+            y >= card.y &&
+            y <= card.y + card.height
+          ) {
+            console.log("Clicked on Card!");
+            elt.type = "CARD";
+            elt.object = card;
+            return elt;
+          }
+        }
+
+        return elt;
       }
 
       function getNextAnchor(x, y) {
@@ -400,35 +458,6 @@ export const Tabletop = props => {
       }
     };
   }
-
-  useEffect(() => {
-    getCanvas(drawings => {
-      setDrawings(drawings);
-    });
-  }, []);
-
-  useEffect(() => {
-    function updateDrawingState(drawing) {
-      setDrawings([...drawings, drawing]);
-    }
-
-    subscribeCanvas(updateDrawingState);
-    subscribeDeletions(id => {
-      const elt = drawings.find(elt => elt.id === id);
-      if (elt) {
-        const index = drawings.indexOf(elt);
-        const copy = [...drawings];
-        copy.splice(index, 1);
-        setDrawings(copy);
-      }
-    });
-
-    function onReturn() {
-      unsubscribeCanvas(updateDrawingState);
-      unsubscribeDeletions();
-    }
-    return onReturn;
-  }, [drawings]);
 
   return (
     <div className="tabletopWrapper">
@@ -486,12 +515,7 @@ export const Tabletop = props => {
         {mode}
       </div>
       <div className="sketchContainer">
-        <P5Wrapper
-          mode={mode}
-          zoom={zoom}
-          drawings={drawings}
-          sketch={sketch}
-        />
+        <P5Wrapper mode={mode} zoom={zoom} sketch={sketch} />
       </div>
     </div>
   );
