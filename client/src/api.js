@@ -7,7 +7,8 @@ const EVENTS = {
   AUDIO_CHANGE: "AUDIO_CHANGE",
   ROLL_DICE: "ROLL_DICE",
   CANVAS: "CANVAS",
-  GETCANVAS: "GETCANVAS"
+  GETCANVAS: "GETCANVAS",
+  REMOVECANVAS: "REMOVECANVAS"
 };
 
 //#region  Helper Functions
@@ -98,10 +99,22 @@ export const getCanvas = cb => {
   });
   socket.emit(EVENTS.GETCANVAS);
 };
+
+export const deleteDrawing = id => {
+  socket.emit(EVENTS.REMOVECANVAS, id);
+};
+
+export const subscribeDeletions = cb => {
+  socket.once(EVENTS.REMOVECANVAS, data => cb(data));
+};
+
+export const unsubscribeDeletions = cb => {
+  unsubscribeEvent(EVENTS.REMOVECANVAS, cb);
+}
 //-----------------------------------------------
 //#endregion
 
-//#region  Other 
+//#region  Other
 //-----------------------------------------------
 export const changeName = newName => {
   socket.emit(EVENTS.COMMAND_NAME, newName);

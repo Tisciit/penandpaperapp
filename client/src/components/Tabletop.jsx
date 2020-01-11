@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import P5Wrapper from "react-p5-wrapper";
 import {
   subscribeCanvas,
-  unsubscribeCanvas,
   updateCanvas,
-  getCanvas
+  getCanvas,
+  subscribeDeletions,
+  deleteDrawing,
+  unsubscribeCanvas,
+  unsubscribeDeletions
 } from "../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
@@ -91,61 +94,24 @@ export const Tabletop = props => {
         mode = props.mode;
         zoom = props.zoom;
         drawings = props.drawings;
+        selection.current = undefined;
 
         //#region REDRAW DRAWING LAYER WHEN PROPS CHANGE
         (function() {
           if (!drawingLayer) return;
           drawingLayer.clear();
 
-          for (let obj of drawings) {
-            if (obj === undefined) continue;
-            const { type } = obj;
-
-            drawingLayer.push();
-            switch (type) {
-              case "SHAPE":
-                const { stroke, fill, points, shape_close } = obj;
-                drawingLayer.beginShape();
-
-                if (stroke) {
-                  drawingLayer.strokeWeight(stroke.weight);
-                  drawingLayer.stroke(
-                    stroke.color.r,
-                    stroke.color.g,
-                    stroke.color.b
-                  );
-                }
-                if (fill.color) {
-                  drawingLayer.fill(fill.color.r, fill.color.g, fill.color.b);
-                }
-
-                for (let p of points) {
-                  drawingLayer.vertex(p.x, p.y);
-                }
-                if (shape_close) drawingLayer.endShape(drawingLayer.CLOSE);
-                else drawingLayer.endShape();
-                break;
-
-              case "RECTANGLE":
-                break;
-
-              case "ELLIPSE":
-                break;
-
-              case "LINE":
-                break;
-
-              default:
-                console.error(`Unrecognized shape ${type}`);
-                break;
-            }
-            drawingLayer.pop();
+          for (const drawing of drawings) {
+            drawDrawing(drawing);
           }
         })();
         //#endregion
       };
 
       const points = [];
+      const selection = {
+        current: undefined
+      };
       p.draw = () => {
         p.clear();
         const w = p.width * zoom;
@@ -186,13 +152,137 @@ export const Tabletop = props => {
             break;
 
           case MODES.SELECT:
-            //TODO: SELECTION MECHANISM
+            if (p.mouseIsPressed) {
+              const selectedDrawing = getSelectedDrawing(x - xOff / zoom, y - yOff / zoom);
+              const copy = JSON.parse(JSON.stringify(selectedDrawing));
+              if (copy.type !== "none") {
+                //Redraw previuosly selected drawing
+                drawSelected();
+                copy.stroke.color = { r: 0, g: 0, b: 255 };
+                drawDrawing(copy);
+                selection.current = selectedDrawing;
+              }
+            }
             break;
 
           default:
             break;
         }
       };
+
+      p.keyPressed = e => {
+        switch (mode) {
+          case MODES.SELECT:
+            //46 is Delete key
+            if (e.keyCode === 46 && selection.current) {
+              deleteDrawing(selection.current.id);
+            }
+            break;
+
+          default:
+            break;
+        }
+      };
+
+      function getSelectedDrawing(x, y) {
+        let tolerance = 1;
+
+        for (let obj of drawings) {
+          if (obj === undefined) continue;
+          const { type } = obj;
+
+          drawingLayer.push();
+          switch (type) {
+            case "SHAPE":
+              const { stroke, points } = obj;
+
+              if (stroke) {
+                tolerance += stroke.weight;
+              }
+
+              for (let p of points) {
+                if (
+                  p.x < x + tolerance &&
+                  p.x > x - tolerance &&
+                  p.y < y + tolerance &&
+                  p.y > y - tolerance
+                ) {
+                  return obj;
+                }
+              }
+              break;
+
+            case "RECTANGLE":
+              break;
+
+            case "ELLIPSE":
+              break;
+
+            case "LINE":
+              break;
+
+            default:
+              console.error(`Unrecognized shape ${type}`);
+              break;
+          }
+        }
+
+        return { type: "none" };
+      }
+
+      function drawDrawing(drawing) {
+        if (drawing === undefined) return;
+        const { type } = drawing;
+
+        drawingLayer.push();
+        switch (type) {
+          case "SHAPE":
+            const { stroke, fill, points, shape_close } = drawing;
+            drawingLayer.beginShape();
+
+            if (stroke) {
+              drawingLayer.strokeWeight(stroke.weight);
+              drawingLayer.stroke(
+                stroke.color.r,
+                stroke.color.g,
+                stroke.color.b
+              );
+            }
+            if (fill.color) {
+              drawingLayer.fill(fill.color.r, fill.color.g, fill.color.b);
+            }
+
+            for (let p of points) {
+              drawingLayer.vertex(p.x, p.y);
+            }
+            if (shape_close) drawingLayer.endShape(drawingLayer.CLOSE);
+            else drawingLayer.endShape();
+            break;
+
+          case "RECTANGLE":
+            break;
+
+          case "ELLIPSE":
+            break;
+
+          case "LINE":
+            break;
+
+          default:
+            console.error(`Unrecognized shape ${type}`);
+            break;
+        }
+        drawingLayer.pop();
+      }
+
+      /**
+       * Draws selected element
+       */
+      function drawSelected() {
+        if (selection.current) {
+          drawDrawing(selection.current);
+        }
+      }
     };
   }
 
@@ -208,13 +298,21 @@ export const Tabletop = props => {
     }
 
     subscribeCanvas(updateDrawingState);
-    subscribeCanvas(() => {
-      console.log("YAY");
+    subscribeDeletions(id => {
+      const elt = drawings.find(elt => elt.id === id);
+      if (elt) {
+        const index = drawings.indexOf(elt);
+        const copy = [...drawings];
+        copy.splice(index, 1);
+        setDrawings(copy);
+      }
     });
 
-    return () => {
-      unsubscribeCanvas();
-    };
+    function onReturn() {
+      unsubscribeCanvas(updateDrawingState);
+      unsubscribeDeletions();
+    }
+    return onReturn;
   }, [drawings]);
 
   return (

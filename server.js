@@ -5,6 +5,7 @@ const fs = require("fs");
 
 const chatHistory = [];
 const drawing = [];
+let drawingId = 1;
 let currentSong = "./sound/beat3.mp3";
 
 const EVENTS = {
@@ -13,7 +14,8 @@ const EVENTS = {
   AUDIO_CHANGE: "AUDIO_CHANGE",
   ROLL_DICE: "ROLL_DICE",
   CANVAS: "CANVAS",
-  GETCANVAS: "GETCANVAS"
+  GETCANVAS: "GETCANVAS",
+  REMOVECANVAS: "REMOVECANVAS"
 };
 
 ioSocket.on("connection", client => {
@@ -57,6 +59,7 @@ ioSocket.on("connection", client => {
 
   client.on(EVENTS.CANVAS, object => {
     console.log(EVENTS.CANVAS);
+    object.id = drawingId++;
     drawing.push(object);
     ioSocket.emit(EVENTS.CANVAS, object);
   });
@@ -64,6 +67,20 @@ ioSocket.on("connection", client => {
   client.on(EVENTS.GETCANVAS, () => {
     console.log(`Client ${client.id} requested existing drawings`);
     client.emit(EVENTS.GETCANVAS, drawing);
+  });
+
+  client.on(EVENTS.REMOVECANVAS, id => {
+    console.log(
+      `Client ${client.id} requested deletion of drawing with id ${id}`
+    );
+    const elt = drawing.find(elt => elt.id === id);
+    if (elt) {
+      const index = drawing.indexOf(elt);
+      const deleted = drawing.splice(index, 1);
+      console.log("Element has been deleted");
+
+      ioSocket.emit(EVENTS.REMOVECANVAS, id);
+    }
   });
 });
 
