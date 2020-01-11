@@ -7,7 +7,8 @@ import {
   subscribeDeletions,
   deleteDrawing,
   unsubscribeCanvas,
-  unsubscribeDeletions
+  unsubscribeDeletions,
+  drawCard
 } from "../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
@@ -50,7 +51,7 @@ export const Tabletop = props => {
       let drawings;
 
       //default Size for Tiles
-      const RADIUS = 50;
+      const RADIUS = 30;
 
       //Point Buffer for Drawing
       const points = [];
@@ -219,13 +220,12 @@ export const Tabletop = props => {
                 // selection.token.y += y - prevY;
 
                 //OR SNAP
-                const newPoint = getNextAnchor(
-                  Math.ceil(x + selection.token.x + selection.token.canvas.width) / 2,
-                  Math.ceil(y + selection.token.y + selection.token.canvas.height) / 2
-                );
+                const newPoint = getNextAnchor(x, y);
 
-                selection.token.x = newPoint.x - (selection.token.canvas.width / 2);
-                selection.token.y = newPoint.y - (selection.token.canvas.height / 2);
+                selection.token.x =
+                  newPoint.x - selection.token.canvas.width / 2;
+                selection.token.y =
+                  newPoint.y - selection.token.canvas.height / 2;
               }
             }
             if (!p.mouseIsPressed) {
@@ -244,6 +244,25 @@ export const Tabletop = props => {
             //46 is Delete key
             if (e.keyCode === 46 && selection.current) {
               deleteDrawing(selection.current.id);
+            } else if (e.keyCode === 68) {
+              //Draw card
+              drawCard(card => {
+                console.log(card);
+                p.loadImage(card[0].image, data => {
+                  //+1 So that Canvas has an odd with, making it easier to center
+                  const c = p.createGraphics(
+                    RADIUS * 1.5 + 1,
+                    RADIUS * 1.5 + 1
+                  );
+                  c.noLoop();
+                  c.image(data, 0, 0, c.width, c.height);
+                  tokens.push({
+                    canvas: c,
+                    x: getNextAnchor(0, 0).x / 2,
+                    y: getNextAnchor(0, 0).y / 2
+                  });
+                });
+              });
             }
             break;
 

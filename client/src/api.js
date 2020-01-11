@@ -8,7 +8,8 @@ const EVENTS = {
   ROLL_DICE: "ROLL_DICE",
   CANVAS: "CANVAS",
   GETCANVAS: "GETCANVAS",
-  REMOVECANVAS: "REMOVECANVAS"
+  REMOVECANVAS: "REMOVECANVAS",
+  DRAWCARD: "DRAW_CARD"
 };
 
 //#region  Helper Functions
@@ -111,6 +112,19 @@ export const subscribeDeletions = cb => {
 export const unsubscribeDeletions = cb => {
   unsubscribeEvent(EVENTS.REMOVECANVAS, cb);
 }
+//-----------------------------------------------
+//#endregion
+
+//#region  Cards
+//-----------------------------------------------
+export const drawCard = (cb) => {
+  socket.emit(EVENTS.DRAWCARD);
+
+  socket.once(EVENTS.DRAWCARD, (data) => {
+    console.log(data);
+    cb(data);
+  })
+};
 //-----------------------------------------------
 //#endregion
 

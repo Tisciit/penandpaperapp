@@ -2,6 +2,7 @@ const app = require("express")();
 const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
 const fs = require("fs");
+const deckapi = require("./deckofcardsapi");
 
 const chatHistory = [];
 const drawing = [];
@@ -15,7 +16,8 @@ const EVENTS = {
   ROLL_DICE: "ROLL_DICE",
   CANVAS: "CANVAS",
   GETCANVAS: "GETCANVAS",
-  REMOVECANVAS: "REMOVECANVAS"
+  REMOVECANVAS: "REMOVECANVAS",
+  DRAWCARD: "DRAW_CARD"
 };
 
 ioSocket.on("connection", client => {
@@ -82,6 +84,17 @@ ioSocket.on("connection", client => {
       ioSocket.emit(EVENTS.REMOVECANVAS, id);
     }
   });
+
+  client.on(EVENTS.DRAWCARD, () => {
+    deckapi.drawCards(1).then(
+      resolve => {
+        client.emit(EVENTS.DRAWCARD, resolve);
+      },
+      reject => {
+        console.log(reject);
+      }
+    );
+  });
 });
 
 app.get("/", (req, res) => {
@@ -101,6 +114,8 @@ app.get("/audio", (req, res) => {
     //TODO: Set 500 header and send response;
   }
 });
+
+deckapi.shuffleDeck();
 
 const PORT = 5000;
 server.listen(PORT, () => {
