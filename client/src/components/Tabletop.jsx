@@ -16,7 +16,6 @@ import {
 import "./Tabletop.css";
 
 import joker from "./tokens/card-joker.svg";
-import dist from "react-p5-wrapper";
 
 export const Tabletop = props => {
   const MODES = {
@@ -51,7 +50,7 @@ export const Tabletop = props => {
       let drawings;
 
       //default Size for Tiles
-      const RADIUS = 30;
+      const RADIUS = 60;
 
       //Point Buffer for Drawing
       const points = [];
@@ -251,8 +250,8 @@ export const Tabletop = props => {
                 p.loadImage(card[0].image, data => {
                   //+1 So that Canvas has an odd with, making it easier to center
                   const c = p.createGraphics(
-                    RADIUS * 1.5 + 1,
-                    RADIUS * 1.5 + 1
+                    RADIUS * 2 * 0.72 + 1,
+                    RADIUS * 2 + 1
                   );
                   c.noLoop();
                   c.image(data, 0, 0, c.width, c.height);
@@ -369,9 +368,6 @@ export const Tabletop = props => {
       }
 
       function getToken(x, y) {
-        //Controls when to select and when to drag
-        let tolerance = 5;
-
         for (const token of tokens) {
           if (
             x >= token.x &&
@@ -486,7 +482,7 @@ export const Tabletop = props => {
           +
         </button>
         {zoom}
-        //
+        ||
         {mode}
       </div>
       <div className="sketchContainer">
