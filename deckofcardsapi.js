@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 
-let deckid = "ee8255tuh95h";
+let deckid;
 let remainingCards;
 
 exports.newDeck = () => {

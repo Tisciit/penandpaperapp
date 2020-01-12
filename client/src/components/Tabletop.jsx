@@ -46,7 +46,7 @@ export const Tabletop = props => {
       subscribeCards(card => {
         console.log(card);
         p.loadImage(card[0].image, data => {
-          //+1 So that Canvas has an odd with, making it easier to center
+          //CARDS HAVE A .72 : 1 Aspect Ratio, so we create the Card this way. We can scale the cards size in draw function later
           const c = getPositionedCanvas(100 * 0.72, 100);
           c.canvas.image(data, 0, 0, c.width, c.height);
           cards.push(c);
@@ -73,6 +73,7 @@ export const Tabletop = props => {
       });
 
       subscribeTokenCard(data => {
+        console.log(`A TOKEN HAS BEEN UPDATED`)
         if (data.type === "CARD") {
           const card = cards.find(elt => elt.id === data.id);
           card.x = data.x;
@@ -161,8 +162,9 @@ export const Tabletop = props => {
 
         //#endregion
 
-        getCanvas(drawings => {
-          drawings = drawings;
+        getCanvas(allDrawings => {
+          drawings.splice(0, drawings.length)
+          drawings.push([...allDrawings]);
         });
 
         p.frameRate(30);
@@ -261,6 +263,7 @@ export const Tabletop = props => {
                   selection.current = elt;
                 }
               } else {
+                console.log("Dragging");
                 const { type, object } = selection.current;
                 //SNAP TO ANCHORS
                 switch (type) {
@@ -268,13 +271,13 @@ export const Tabletop = props => {
                     const newPoint = getNextAnchor(x, y);
                     object.x = newPoint.x - object.width / 2;
                     object.y = newPoint.y - object.height / 2;
-                    updateTokenCard(Object.assign(object, { type: "TOKEN" }));
                     break;
 
                   case "CARD":
                     object.x += x - prevX;
                     object.y += y - prevY;
-                    updateTokenCard(Object.assign(object, { type: "CARD" }));
+                    console.log(object);
+                    console.log("Updating card locally");
                     break;
 
                   default:
@@ -282,6 +285,12 @@ export const Tabletop = props => {
                 }
               }
             } else {
+              //If an object has been selected, send changes to the server
+              if (selection.current) {
+                const { type, object } = selection.current;
+                console.log("Drag end, sending changes to server");
+                updateTokenCard(Object.assign(object, { type: type }));
+              }
               selection.current = undefined;
             }
             break;

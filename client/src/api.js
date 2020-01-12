@@ -104,6 +104,7 @@ export const getCanvas = cb => {
 };
 
 export const updateTokenCard = elt => {
+  console.log("API: UPDATE_TOKEN_CARD")
   socket.emit(EVENTS.UPDATETOKENORCARD, elt)
 }
 

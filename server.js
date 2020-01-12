@@ -133,7 +133,7 @@ app.get("/audio", (req, res) => {
   }
 });
 
-deckapi.shuffleDeck();
+deckapi.newDeck();
 
 const PORT = 5000;
 server.listen(PORT, () => {
