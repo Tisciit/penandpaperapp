@@ -95,9 +95,12 @@ ioSocket.on("connection", client => {
     deckapi.drawCards(1).then(
       resolve => {
         //Send Drawn Card to everyone :)
-        const card = Object.assign(resolve, { id: cardId++ });
-        cards.push(card);
-        ioSocket.emit(EVENTS.DRAWCARD, card);
+        for(let card of resolve){
+          card.id = cardId++;
+          card.type = "CARD";
+        }
+        cards.push(...resolve);
+        ioSocket.emit(EVENTS.DRAWCARD, resolve);
       },
       reject => {
         console.log(reject);
@@ -108,9 +111,12 @@ ioSocket.on("connection", client => {
   client.on(EVENTS.UPDATETOKENORCARD, elt => {
     if (elt.type === "CARD") {
       const card = cards.find(c => c.id === elt.id);
-      card.x = elt.x;
-      card.y = elt.y;
-      ioSocket.emit(EVENTS.UPDATETOKENORCARD, card);
+      console.log(card);
+      if (card) {
+        card.x = elt.x;
+        card.y = elt.y;
+        ioSocket.emit(EVENTS.UPDATETOKENORCARD, card);
+      }
     }
   });
 });

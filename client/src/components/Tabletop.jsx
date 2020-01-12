@@ -24,33 +24,30 @@ export const Tabletop = props => {
     DRAGELEMENTS: 3
   };
 
+  console.log("TABLETOP RENDER!");
+
   const [mode, setMode] = useState(MODES.SELECT);
   const [zoom, setZoom] = useState(1);
   const [sketch] = useState(getSketch);
 
   function getSketch() {
     return function sketch(p) {
-      const getPositionedCanvas = (w, h) => {
-        const canvas = p.createGraphics(w, h);
-        canvas.noLoop();
-        return {
-          canvas: canvas,
-          width: w,
-          height: h,
-          x: 0,
-          y: 0
-        };
-      };
-
       //#region Event subscriptions. These should not only fire once but continously
-      subscribeCards(card => {
-        console.log(card);
-        p.loadImage(card[0].image, data => {
-          //CARDS HAVE A .72 : 1 Aspect Ratio, so we create the Card this way. We can scale the cards size in draw function later
-          const c = getPositionedCanvas(100 * 0.72, 100);
-          c.canvas.image(data, 0, 0, c.width, c.height);
-          cards.push(c);
-        });
+      subscribeCards(cardArray => {
+        console.log("New cards", cardArray);
+        console.log("Local cards", cards);
+        for (const card of cardArray) {
+          p.loadImage(card.image, data => {
+            //CARDS HAVE A .72 : 1 Aspect Ratio, so we create the Card this way. We can scale the cards size in draw function later
+            card.pImage = data;
+            card.aspectRatio = data.height / data.width;
+            card.width = data.width;
+            card.height = data.height;
+            card.x = card.x || 0;
+            card.y = card.y || 0;
+            cards.push(card);
+          });
+        }
       });
 
       subscribeDrawings(data => {
@@ -73,9 +70,11 @@ export const Tabletop = props => {
       });
 
       subscribeTokenCard(data => {
-        console.log(`A TOKEN HAS BEEN UPDATED`)
+        console.log(`A TOKEN HAS BEEN UPDATED`);
+        console.log(data);
         if (data.type === "CARD") {
           const card = cards.find(elt => elt.id === data.id);
+          console.log(card);
           card.x = data.x;
           card.y = data.y;
         }
@@ -84,9 +83,9 @@ export const Tabletop = props => {
       //#endregion
 
       //#region LAYERS FOR THE CANVAS
-      let backgroundLayer;
-      let drawingLayer;
-      let tempLayer;
+      let backgroundLayer; //Contains the hex-grid
+      let drawingLayer; //Contains the drawings
+      let tempLayer; //Temporary layer for drawing-preview
       //#endregion
 
       //#region OFFSETS WHEN MOVING THE CANVAS
@@ -163,7 +162,7 @@ export const Tabletop = props => {
         //#endregion
 
         getCanvas(allDrawings => {
-          drawings.splice(0, drawings.length)
+          drawings.splice(0, drawings.length);
           drawings.push([...allDrawings]);
         });
 
@@ -185,23 +184,23 @@ export const Tabletop = props => {
         p.image(drawingLayer, xOff, yOff, w, h);
         p.image(tempLayer, xOff, yOff, w, h);
 
-        for (const token of tokens) {
-          p.image(
-            token.canvas,
-            token.x + xOff / zoom,
-            token.y + yOff / zoom,
-            token.width * zoom,
-            token.height * zoom
-          );
-        }
+        // for (const token of tokens) {
+        //   p.image(
+        //     token.canvas,
+        //     token.x + xOff / zoom,
+        //     token.y + yOff / zoom,
+        //     token.width * zoom,
+        //     token.height * zoom
+        //   );
+        // }
 
         for (const card of cards) {
           p.image(
-            card.canvas,
+            card.pImage,
             card.x + xOff / zoom,
             card.y + yOff / zoom,
-            card.width * zoom,
-            card.height * zoom
+            card.width / zoom,
+            card.height / zoom
           );
         }
 
@@ -264,19 +263,19 @@ export const Tabletop = props => {
                 }
               } else {
                 console.log("Dragging");
-                const { type, object } = selection.current;
+                const { type } = selection.current;
                 //SNAP TO ANCHORS
                 switch (type) {
                   case "TOKEN":
                     const newPoint = getNextAnchor(x, y);
-                    object.x = newPoint.x - object.width / 2;
-                    object.y = newPoint.y - object.height / 2;
+                    selection.current.x = newPoint.x - selection.current.width / 2;
+                    selection.current.y = newPoint.y - selection.current.height / 2;
                     break;
 
                   case "CARD":
-                    object.x += x - prevX;
-                    object.y += y - prevY;
-                    console.log(object);
+                    selection.current.x += x - prevX;
+                    selection.current.y += y - prevY;
+                    console.log(selection.current);
                     console.log("Updating card locally");
                     break;
 
@@ -287,9 +286,16 @@ export const Tabletop = props => {
             } else {
               //If an object has been selected, send changes to the server
               if (selection.current) {
-                const { type, object } = selection.current;
+                const { x, y, id, type } = selection.current;
+                console.log(x, y);
+                console.log(id, type);
                 console.log("Drag end, sending changes to server");
-                updateTokenCard(Object.assign(object, { type: type }));
+                updateTokenCard({
+                  x,
+                  y,
+                  id,
+                  type
+                });
               }
               selection.current = undefined;
             }
@@ -324,7 +330,6 @@ export const Tabletop = props => {
           if (obj === undefined) continue;
           const { type } = obj;
 
-          drawingLayer.push();
           switch (type) {
             case "SHAPE":
               const { stroke, points } = obj;
@@ -355,7 +360,6 @@ export const Tabletop = props => {
               break;
 
             default:
-              console.error(`Unrecognized shape ${type}`);
               break;
           }
         }
@@ -415,10 +419,6 @@ export const Tabletop = props => {
       }
 
       function getTokenCard(x, y) {
-        const elt = {
-          type: undefined,
-          object: undefined
-        };
         for (const token of tokens) {
           if (
             x >= token.x &&
@@ -427,9 +427,7 @@ export const Tabletop = props => {
             y <= token.y + token.height
           ) {
             console.log("Clicked on Token!");
-            elt.type = "TOKEN";
-            elt.object = token;
-            return elt;
+            return token;
           }
         }
 
@@ -441,13 +439,11 @@ export const Tabletop = props => {
             y <= card.y + card.height
           ) {
             console.log("Clicked on Card!");
-            elt.type = "CARD";
-            elt.object = card;
-            return elt;
+            return card;
           }
         }
 
-        return elt;
+        return { type: undefined };
       }
 
       function getNextAnchor(x, y) {
