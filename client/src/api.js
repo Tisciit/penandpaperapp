@@ -108,7 +108,7 @@ export const updateTokenCard = elt => {
   socket.emit(EVENTS.UPDATETOKENORCARD, elt)
 }
 
-export const subscribeTokenCard = (cb, once = false) => {
+export const subscribeTokenCards = (cb, once = false) => {
   if(once) {
     socket.once(EVENTS.UPDATETOKENORCARD, data => cb(data));
   } else {

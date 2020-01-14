@@ -7,9 +7,8 @@ import {
   subscribeDeletions,
   deleteDrawing,
   drawCard,
-  subscribeCards,
   updateTokenCard,
-  subscribeTokenCard
+  subscribeTokenCards
 } from "../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
@@ -33,20 +32,44 @@ export const Tabletop = props => {
   function getSketch() {
     return function sketch(p) {
       //#region Event subscriptions. These should not only fire once but continously
-      subscribeCards(cardArray => {
-        console.log("New cards", cardArray);
-        console.log("Local cards", cards);
-        for (const card of cardArray) {
-          p.loadImage(card.image, data => {
-            //CARDS HAVE A .72 : 1 Aspect Ratio, so we create the Card this way. We can scale the cards size in draw function later
-            card.pImage = data;
-            card.aspectRatio = data.height / data.width;
-            card.width = data.width;
-            card.height = data.height;
-            card.x = card.x || 0;
-            card.y = card.y || 0;
-            cards.push(card);
-          });
+
+      function getTokenOrCardIndex(token_or_card) {
+        const elt = tokenAndCards.find(elt => elt.id === token_or_card.id);
+        return tokenAndCards.indexOf(elt);
+      }
+
+      function loadTokenOrCard(token_or_card) {
+        p.loadImage(token_or_card.image, data => {
+          token_or_card.pImage = data;
+          token_or_card.aspectRatio = data.height / data.width;
+          token_or_card.width = data.width;
+          token_or_card.height = data.height;
+          token_or_card.x = token_or_card.x || 0;
+          token_or_card.y = token_or_card.y || 0;
+          tokenAndCards.push(token_or_card);
+        });
+      }
+
+      function updateLocalTokenCard(index, x, y) {
+        tokenAndCards[index].x = x;
+        tokenAndCards[index].y = y;
+      }
+
+      subscribeTokenCards(array => {
+        console.log(array);
+
+        //If only one token or card comes in, make the value iterable
+        const iterable = Array.isArray(array) ? array : [array];
+        for (const elt of iterable) {
+          /* Check if token or card is available locally */
+          const index = getTokenOrCardIndex(elt);
+          if (index > 0) {
+            console.log("Updating card");
+            updateLocalTokenCard(index, elt.x, elt.y);
+          } else {
+            console.log("Loading new card");
+            loadTokenOrCard(elt);
+          }
         }
       });
 
@@ -66,17 +89,6 @@ export const Tabletop = props => {
           for (const drawing of drawings) {
             drawDrawing(drawing);
           }
-        }
-      });
-
-      subscribeTokenCard(data => {
-        console.log(`A TOKEN HAS BEEN UPDATED`);
-        console.log(data);
-        if (data.type === "CARD") {
-          const card = cards.find(elt => elt.id === data.id);
-          console.log(card);
-          card.x = data.x;
-          card.y = data.y;
         }
       });
 
@@ -104,8 +116,7 @@ export const Tabletop = props => {
       //Drawing Array & Point Buffer for Drawing
       const drawings = [];
       const points = [];
-      const tokens = [];
-      const cards = [];
+      const tokenAndCards = [];
 
       //contains selection info
       const selection = {
@@ -161,9 +172,21 @@ export const Tabletop = props => {
 
         //#endregion
 
-        getCanvas(allDrawings => {
+        getCanvas(allContent => {
+          const { drawing, tokenCards } = allContent;
+          console.log(allContent);
+
           drawings.splice(0, drawings.length);
-          drawings.push([...allDrawings]);
+          drawings.push(...drawing);
+
+          for (const d of drawings) {
+            drawDrawing(d);
+          }
+
+          for (const tC of tokenCards) {
+            console.log("Loading",  tC);
+            loadTokenOrCard(tC);
+          }
         });
 
         p.frameRate(30);
@@ -184,23 +207,13 @@ export const Tabletop = props => {
         p.image(drawingLayer, xOff, yOff, w, h);
         p.image(tempLayer, xOff, yOff, w, h);
 
-        // for (const token of tokens) {
-        //   p.image(
-        //     token.canvas,
-        //     token.x + xOff / zoom,
-        //     token.y + yOff / zoom,
-        //     token.width * zoom,
-        //     token.height * zoom
-        //   );
-        // }
-
-        for (const card of cards) {
+        for (const elt of tokenAndCards) {
           p.image(
-            card.pImage,
-            card.x + xOff / zoom,
-            card.y + yOff / zoom,
-            card.width / zoom,
-            card.height / zoom
+            elt.pImage,
+            elt.x + xOff / zoom,
+            elt.y + yOff / zoom,
+            elt.width / zoom,
+            elt.height / zoom
           );
         }
 
@@ -268,8 +281,10 @@ export const Tabletop = props => {
                 switch (type) {
                   case "TOKEN":
                     const newPoint = getNextAnchor(x, y);
-                    selection.current.x = newPoint.x - selection.current.width / 2;
-                    selection.current.y = newPoint.y - selection.current.height / 2;
+                    selection.current.x =
+                      newPoint.x - selection.current.width / 2;
+                    selection.current.y =
+                      newPoint.y - selection.current.height / 2;
                     break;
 
                   case "CARD":
@@ -419,27 +434,15 @@ export const Tabletop = props => {
       }
 
       function getTokenCard(x, y) {
-        for (const token of tokens) {
+        for (const elt of tokenAndCards) {
           if (
-            x >= token.x &&
-            x <= token.x + token.width &&
-            y >= token.y &&
-            y <= token.y + token.height
+            x >= elt.x &&
+            x <= elt.x + elt.width &&
+            y >= elt.y &&
+            y <= elt.y + elt.height
           ) {
-            console.log("Clicked on Token!");
-            return token;
-          }
-        }
-
-        for (const card of cards) {
-          if (
-            x >= card.x &&
-            x <= card.x + card.width &&
-            y >= card.y &&
-            y <= card.y + card.height
-          ) {
-            console.log("Clicked on Card!");
-            return card;
+            console.log(`Clicked on ${elt.type}!`);
+            return elt;
           }
         }
 

@@ -8,10 +8,8 @@ const chatHistory = [];
 const drawing = [];
 let drawingId = 1;
 
-const tokens = [];
-let tokenId = 1;
-const cards = [];
-let cardId = 1;
+const tokenCards = [];
+let tokenCardId = 1;
 let currentSong = "./sound/beat3.mp3";
 
 const EVENTS = {
@@ -73,8 +71,8 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.GETCANVAS, () => {
-    console.log(`Client ${client.id} requested existing drawings`);
-    client.emit(EVENTS.GETCANVAS, drawing);
+    console.log(`Client ${client.id} requested existing canvas`);
+    client.emit(EVENTS.GETCANVAS, { drawing, tokenCards });
   });
 
   client.on(EVENTS.REMOVECANVAS, id => {
@@ -92,15 +90,16 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.DRAWCARD, () => {
+    console.log(`Client with id ${client.id} requested a card`)
     deckapi.drawCards(1).then(
       resolve => {
         //Send Drawn Card to everyone :)
-        for(let card of resolve){
-          card.id = cardId++;
+        for (let card of resolve) {
+          card.id = tokenCardId++;
           card.type = "CARD";
         }
-        cards.push(...resolve);
-        ioSocket.emit(EVENTS.DRAWCARD, resolve);
+        tokenCards.push(...resolve);
+        ioSocket.emit(EVENTS.UPDATETOKENORCARD, resolve);
       },
       reject => {
         console.log(reject);
@@ -109,14 +108,12 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.UPDATETOKENORCARD, elt => {
-    if (elt.type === "CARD") {
-      const card = cards.find(c => c.id === elt.id);
-      console.log(card);
-      if (card) {
-        card.x = elt.x;
-        card.y = elt.y;
-        ioSocket.emit(EVENTS.UPDATETOKENORCARD, card);
-      }
+    const tokenCard = tokenCards.find(c => c.id === elt.id);
+    console.log(tokenCard);
+    if (tokenCard) {
+      tokenCard.x = elt.x;
+      tokenCard.y = elt.y;
+      ioSocket.emit(EVENTS.UPDATETOKENORCARD, tokenCard);
     }
   });
 });
