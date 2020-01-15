@@ -25,8 +25,9 @@ export const sketch = p => {
     p.loadImage(token_or_card.image, data => {
       token_or_card.pImage = data;
       token_or_card.aspectRatio = data.height / data.width;
-      token_or_card.width = data.width;
-      token_or_card.height = data.height;
+      const sizeMod = token_or_card.type === "CARD" ? 0.4 : 0.4;
+      token_or_card.width = data.width * sizeMod;
+      token_or_card.height = data.height * sizeMod;
       token_or_card.x = token_or_card.x || 0;
       token_or_card.y = token_or_card.y || 0;
       tokenAndCards.push(token_or_card);
@@ -128,13 +129,12 @@ export const sketch = p => {
   function drawTokenOrCards() {
     tokenAndCardLayer.clear();
     for (const token_or_card of tokenAndCards) {
-      const sizemodifier = token_or_card.type === "CARD" ? 0.4 : 1;
       tokenAndCardLayer.image(
         token_or_card.pImage,
         token_or_card.x + xOff / zoom,
         token_or_card.y + yOff / zoom,
-        (token_or_card.width * sizemodifier) / zoom,
-        (token_or_card.height * sizemodifier) / zoom
+        token_or_card.width / zoom,
+        token_or_card.height / zoom
       );
     }
   }
