@@ -4,7 +4,7 @@ import "./App.css";
 // import { ChatBox } from "./components/ChatBox";
 // import { DiceArea } from "./components/DiceArea";
 //import { AudioPlayer } from "./components/AudioPlayer";
-import { Tabletop } from "./components/Tabletop";
+import { Tabletop } from "./components/Tabletop/Tabletop";
 
 function App() {
   return (

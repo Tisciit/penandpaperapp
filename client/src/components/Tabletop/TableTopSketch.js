@@ -7,10 +7,10 @@ import {
   drawCard,
   updateTokenCard,
   subscribeTokenCards
-} from "../api";
+} from "../../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
-} from "../p5api";
+} from "../../p5api";
 
 import { MODES } from "./Tabletop";
 
