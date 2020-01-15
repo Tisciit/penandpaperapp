@@ -119,6 +119,14 @@ ioSocket.on("connection", client => {
   });
 });
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 app.get("/", (req, res) => {
   res.send(chatHistory);
 });
@@ -137,8 +145,10 @@ app.get("/assets", (req, res) => {
   fs.readdir("./static/assets", (err, files) => {
     const fileNames = [];
     if (err) {
-      res.send(["There is an issue right now"]);
+      res.status(500);
+      fileNames.push("There is an issue right now");
     } else {
+      res.status(200);
       files.forEach(file => {
         fileNames.push(file);
       });

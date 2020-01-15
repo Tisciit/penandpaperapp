@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import P5Wrapper from "react-p5-wrapper";
 import { sketch } from "./TableTopSketch";
-import {ImageSelector} from "./ImageSelector";
+import { ImageSelector } from "./ImageSelector";
 import "./Tabletop.css";
 
 export const MODES = {
@@ -73,6 +73,7 @@ export const Tabletop = () => {
       <div className="sketchContainer">
         <P5Wrapper mode={mode} zoom={zoom} sketch={sketch} />
       </div>
+      <ImageSelector />
     </div>
   );
 };

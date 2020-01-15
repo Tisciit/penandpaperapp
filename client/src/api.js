@@ -10,7 +10,7 @@ const EVENTS = {
   GETCANVAS: "GETCANVAS",
   REMOVECANVAS: "REMOVECANVAS",
   DRAWCARD: "DRAW_CARD",
-  UPDATETOKENORCARD: "UPDATE_TOKENCARD",
+  UPDATETOKENORCARD: "UPDATE_TOKENCARD"
 };
 
 //#region  Helper Functions
@@ -45,7 +45,9 @@ export const sendChat = message => {
 
 //#region  Audio
 //-----------------------------------------------
-export const audioURL = "http://" + window.location.hostname + ":5000/audio";
+const PORT = 5000;
+export const audioURL = `http://${window.location.hostname}:${PORT}/audio`;
+export const assetURL = `http://${window.location.hostname}:${PORT}/assets`;
 
 export const subscribeAudio = cb => {
   socket.once(EVENTS.AUDIO_CHANGE, data => cb(data));
@@ -104,17 +106,17 @@ export const getCanvas = cb => {
 };
 
 export const updateTokenCard = elt => {
-  console.log("API: UPDATE_TOKEN_CARD")
-  socket.emit(EVENTS.UPDATETOKENORCARD, elt)
-}
+  console.log("API: UPDATE_TOKEN_CARD");
+  socket.emit(EVENTS.UPDATETOKENORCARD, elt);
+};
 
 export const subscribeTokenCards = (cb, once = false) => {
-  if(once) {
+  if (once) {
     socket.once(EVENTS.UPDATETOKENORCARD, data => cb(data));
   } else {
     socket.on(EVENTS.UPDATETOKENORCARD, data => cb(data));
   }
-}
+};
 
 export const deleteDrawing = id => {
   socket.emit(EVENTS.REMOVECANVAS, id);
