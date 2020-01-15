@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const app = express();
 const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
 const fs = require("fs");
@@ -10,7 +11,7 @@ let drawingId = 1;
 
 const tokenCards = [];
 let tokenCardId = 1;
-let currentSong = "./sound/beat3.mp3";
+let currentSong = "./static/sound/beat3.mp3";
 
 const EVENTS = {
   NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
@@ -90,7 +91,7 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.DRAWCARD, () => {
-    console.log(`Client with id ${client.id} requested a card`)
+    console.log(`Client with id ${client.id} requested a card`);
     deckapi.drawCards(1).then(
       resolve => {
         //Send Drawn Card to everyone :)
@@ -122,11 +123,6 @@ app.get("/", (req, res) => {
   res.send(chatHistory);
 });
 
-app.get("/events", (req, res) => {
-  console.log(EVENTS);
-  res.send(JSON.stringify(EVENTS));
-});
-
 app.get("/audio", (req, res) => {
   if (fs.existsSync(currentSong)) {
     const src = fs.createReadStream(currentSong);
@@ -135,6 +131,23 @@ app.get("/audio", (req, res) => {
     //TODO: Set 500 header and send response;
   }
 });
+
+app.get("/assets", (req, res) => {
+  console.log("Assets have been requested");
+  fs.readdir("./static/assets", (err, files) => {
+    const fileNames = [];
+    if (err) {
+      res.send(["There is an issue right now"]);
+    } else {
+      files.forEach(file => {
+        fileNames.push(file);
+      });
+    }
+    res.send(fileNames);
+  });
+});
+
+app.use(express.static("./static"));
 
 deckapi.shuffleDeck();
 

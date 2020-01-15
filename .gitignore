@@ -1,4 +1,5 @@
 node_modules/
 
 # Provide sounds yourself by creating the directory and placing the sound files there or serve them any other way
-sound/
+static/assets/*
+static/sound/*
