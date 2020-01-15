@@ -96,31 +96,12 @@ export const subscribeDrawings = (cb, once = false) => {
     socket.on(EVENTS.SEND_NEW_DRAWING, data => cb(data));
   }
 };
-
 export const unsubscribeDrawings = () => {
   unsubscribeEvent(EVENTS.SEND_NEW_DRAWING);
 };
-
 export const sendNewDrawing = obj => {
   socket.emit(EVENTS.SEND_NEW_DRAWING, obj);
 };
-
-export const updateTokenCard = elt => {
-  socket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, elt);
-};
-
-export const subscribeTokenCards = (cb, once = false) => {
-  if (once) {
-    socket.once(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
-  } else {
-    socket.on(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
-  }
-};
-
-export const deleteDrawing = id => {
-  socket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
-};
-
 export const subscribeDeletions = (cb, once = false) => {
   if (once) {
     socket.once(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
@@ -128,17 +109,30 @@ export const subscribeDeletions = (cb, once = false) => {
     socket.on(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
   }
 };
-
 export const unsubscribeDeletions = () => {
   unsubscribeEvent(EVENTS.REQUEST_DELETION_DRAWING);
 };
-
-export const drawCard = cb => {
-  socket.emit(EVENTS.REQUEST_DRAW_CARD);
-
-  subscribeCards(cb, true);
+export const deleteDrawing = id => {
+  socket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
 };
 
+
+export const updateTokenCard = elt => {
+  socket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, elt);
+};
+export const subscribeTokenCards = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
+  } else {
+    socket.on(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
+  }
+};
+export const addToken = token => {
+  socket.emit(EVENTS.REQUEST_NEW_TOKEN, token);
+};
+export const drawCard = () => {
+  socket.emit(EVENTS.REQUEST_DRAW_CARD);
+};
 export const subscribeCards = (cb, once = false) => {
   if (once) {
     socket.once(EVENTS.REQUEST_DRAW_CARD, data => cb(data));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { assetURL } from "../../api";
+import { assetURL, addToken } from "../../api";
 
 export const ImageSelector = () => {
   const [images, setImages] = useState([]);
@@ -23,7 +23,14 @@ export const ImageSelector = () => {
           <img
             key={id}
             src={`${assetURL}/${elt}`}
-            onDoubleClick={e => console.log(e.target)}
+            onDoubleClick={e => {
+              console.log(e.target);
+              if (e.target.src) {
+                const token = {};
+                token.image = e.target.src;
+                addToken(token);
+              }
+            }}
           />
         );
       })}

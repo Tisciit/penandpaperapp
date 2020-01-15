@@ -100,6 +100,18 @@ ioSocket.on("connection", client => {
     }
   });
 
+  client.on(EVENTS.REQUEST_NEW_TOKEN, token => {
+    console.log(token);
+    if (token.image) {
+      //Valid token?
+      token.id = tokenCardId++;
+      token.type = "TOKEN";
+      token.x = token.x || 0;
+      token.y = token.y || 0;
+      tokenCards.push(token);
+      ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, token);
+    }
+  });
   client.on(EVENTS.REQUEST_DRAW_CARD, () => {
     console.log(`Client with id ${client.id} requested a card`);
     deckapi.drawCards(1).then(
