@@ -14,28 +14,38 @@ let tokenCardId = 1;
 let currentSong = "./static/sound/beat3.mp3";
 
 const EVENTS = {
-  NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
-  COMMAND_NAME: "COMMAND_NAME",
-  AUDIO_CHANGE: "AUDIO_CHANGE",
-  ROLL_DICE: "ROLL_DICE",
-  CANVAS: "CANVAS",
-  GETCANVAS: "GETCANVAS",
-  REMOVECANVAS: "REMOVECANVAS",
-  DRAWCARD: "DRAW_CARD",
-  UPDATETOKENORCARD: "UPDATE_TOKENCARD"
+  // NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
+  // COMMAND_NAME: "COMMAND_NAME",
+  // AUDIO_CHANGE: "AUDIO_CHANGE",
+  // ROLL_DICE: "ROLL_DICE",
+  // CANVAS: "CANVAS",
+  // GETCANVAS: "GETCANVAS",
+  // REMOVECANVAS: "REMOVECANVAS",
+  // DRAWCARD: "DRAW_CARD",
+  // UPDATETOKENORCARD: "UPDATE_TOKENCARD",
+
+  SEND_CHAT_MESSAGE: "SEND_CHAT_MESSAGE",
+  CHANGE_NAME: "CHANGE_Name",
+  CHANGE_AUDIO: "CHANGE_AUDIO",
+  REQUEST_DICE_ROLL: "REQUEST_DICE_ROLL",
+  REQUEST_EXISTING_TABLETOP: "REQUEST_EXISTING_TABLETOP",
+  SEND_NEW_DRAWING: "SEND_NEW_DRAWING",
+  REQUEST_DELETION_DRAWING: "REQUEST_DELETION",
+  REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
+  REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
+  REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD",
+  REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
 };
+deckapi.shuffleDeck();
 
+//#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {
-  //#region EVENTS for "/" commands
-
-  // client.emit(EVENTS.CANVAS, drawing);
-
   client.on(EVENTS.COMMAND_NAME, newName => {
     console.log(EVENTS.COMMAND_NAME);
     client.name = newName;
   });
 
-  client.on(EVENTS.NEW_CHAT_MESSAGE, message => {
+  client.on(EVENTS.SEND_CHAT_MESSAGE, message => {
     console.log(EVENTS.NEW_CHAT_MESSAGE);
     const time = new Date().getTime();
     chatHistory.push({ client: client.id, time, message });
@@ -48,13 +58,13 @@ ioSocket.on("connection", client => {
     ioSocket.emit(EVENTS.NEW_CHAT_MESSAGE, data);
   });
 
-  client.on(EVENTS.AUDIO_CHANGE, newSong => {
+  client.on(EVENTS.CHANGE_AUDIO, newSong => {
     console.log("GM CHANGED SONG TO " + newSong);
     currentSong = `./sound/${newSong}.mp3`;
     ioSocket.emit(EVENTS.AUDIO_CHANGE, newSong);
   });
 
-  client.on(EVENTS.ROLL_DICE, (diceString, options) => {
+  client.on(EVENTS.REQUEST_DICE_ROLL, (diceString, options) => {
     const ROLLTOOPTIONS = {
       EVERYONE: 1,
       SELF: 2,
@@ -64,19 +74,19 @@ ioSocket.on("connection", client => {
     const rollTo = options.rollTo || ROLLTOOPTIONS.EVERYONE;
   });
 
-  client.on(EVENTS.CANVAS, object => {
-    console.log(EVENTS.CANVAS);
+  client.on(EVENTS.SEND_NEW_DRAWING, object => {
+    console.log(client, EVENTS.SEND_NEW_DRAWING);
     object.id = drawingId++;
     drawing.push(object);
-    ioSocket.emit(EVENTS.CANVAS, object);
+    ioSocket.emit(EVENTS.SEND_NEW_DRAWING, object);
   });
 
-  client.on(EVENTS.GETCANVAS, () => {
-    console.log(`Client ${client.id} requested existing canvas`);
-    client.emit(EVENTS.GETCANVAS, { drawing, tokenCards });
+  client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {
+    console.log(`Client ${client.id} requested existing tabletop`);
+    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, { drawing, tokenCards });
   });
 
-  client.on(EVENTS.REMOVECANVAS, id => {
+  client.on(EVENTS.REQUEST_DELETION_DRAWING, id => {
     console.log(
       `Client ${client.id} requested deletion of drawing with id ${id}`
     );
@@ -86,11 +96,11 @@ ioSocket.on("connection", client => {
       drawing.splice(index, 1);
       console.log("Element has been deleted");
 
-      ioSocket.emit(EVENTS.REMOVECANVAS, id);
+      ioSocket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
     }
   });
 
-  client.on(EVENTS.DRAWCARD, () => {
+  client.on(EVENTS.REQUEST_DRAW_CARD, () => {
     console.log(`Client with id ${client.id} requested a card`);
     deckapi.drawCards(1).then(
       resolve => {
@@ -100,7 +110,7 @@ ioSocket.on("connection", client => {
           card.type = "CARD";
         }
         tokenCards.push(...resolve);
-        ioSocket.emit(EVENTS.UPDATETOKENORCARD, resolve);
+        ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, resolve);
       },
       reject => {
         console.log(reject);
@@ -108,17 +118,18 @@ ioSocket.on("connection", client => {
     );
   });
 
-  client.on(EVENTS.UPDATETOKENORCARD, elt => {
+  client.on(EVENTS.REQUEST_UPDATE_TOKENCARD, elt => {
     const tokenCard = tokenCards.find(c => c.id === elt.id);
     console.log(tokenCard);
     if (tokenCard) {
       tokenCard.x = elt.x;
       tokenCard.y = elt.y;
-      ioSocket.emit(EVENTS.UPDATETOKENORCARD, tokenCard);
+      ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, tokenCard);
     }
   });
 });
-
+//#endregion
+//#region --------------------- Express ---------------------
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -159,9 +170,8 @@ app.get("/assets", (req, res) => {
 
 app.use(express.static("./static"));
 
-deckapi.shuffleDeck();
-
 const PORT = 5000;
 server.listen(PORT, () => {
   console.log("Listening");
 });
+//#endregion

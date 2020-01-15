@@ -19,7 +19,13 @@ export const ImageSelector = () => {
     <div className="ImageSelector">
       I AM IMAGE SELECTOR
       {images.map((elt, id) => {
-        return <img key={id} src={`${assetURL}/${elt}`} />;
+        return (
+          <img
+            key={id}
+            src={`${assetURL}/${elt}`}
+            onDoubleClick={e => console.log(e.target)}
+          />
+        );
       })}
     </div>
   );

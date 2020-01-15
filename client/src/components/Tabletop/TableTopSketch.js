@@ -1,7 +1,7 @@
 import {
   subscribeDrawings,
-  updateCanvas,
-  getCanvas,
+  sendNewDrawing,
+  getExistingTableTop,
   subscribeDeletions,
   deleteDrawing,
   drawCard,
@@ -299,7 +299,7 @@ export const sketch = p => {
     //#endregion
 
     //Initially get all content from server
-    getCanvas(allContent => {
+    getExistingTableTop(allContent => {
       const { drawing, tokenCards } = allContent;
 
       console.log("Drawings", drawing);
@@ -348,7 +348,7 @@ export const sketch = p => {
         } else {
           if (points.length > 0) {
             const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-            updateCanvas(obj);
+            sendNewDrawing(obj);
             points.splice(0, points.length);
             tempLayer.clear();
           }

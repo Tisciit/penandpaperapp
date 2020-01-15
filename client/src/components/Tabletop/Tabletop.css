@@ -36,3 +36,11 @@
 .cursorMove {
   cursor: move;
 }
+
+.ImageSelector {
+  height: 3rem;
+}
+
+.ImageSelector img {
+  height: 100%;
+}

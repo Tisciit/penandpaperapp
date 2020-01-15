@@ -1,20 +1,25 @@
 import io from "socket.io-client";
+
+//#region --------------------- Server Constants ---------------------
 const socket = io(":5000");
 
 const EVENTS = {
-  NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
-  COMMAND_NAME: "COMMAND_NAME",
-  AUDIO_CHANGE: "AUDIO_CHANGE",
-  ROLL_DICE: "ROLL_DICE",
-  CANVAS: "CANVAS",
-  GETCANVAS: "GETCANVAS",
-  REMOVECANVAS: "REMOVECANVAS",
-  DRAWCARD: "DRAW_CARD",
-  UPDATETOKENORCARD: "UPDATE_TOKENCARD"
+  SEND_CHAT_MESSAGE: "SEND_CHAT_MESSAGE",
+  CHANGE_NAME: "CHANGE_Name",
+  CHANGE_AUDIO: "CHANGE_AUDIO",
+  REQUEST_DICE_ROLL: "REQUEST_DICE_ROLL",
+  REQUEST_EXISTING_TABLETOP: "REQUEST_EXISTING_TABLETOP",
+  SEND_NEW_DRAWING: "SEND_NEW_DRAWING",
+  REQUEST_DELETION_DRAWING: "REQUEST_DELETION",
+  REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
+  REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
+  REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD",
+  REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
 };
 
-//#region  Helper Functions
-//-----------------------------------------------
+const PORT = 5000;
+//#endregion
+//#region --------------------- Helper Functions ---------------------
 const unsubscribeEvent = (event, callback) => {
   if (callback) {
     //Unsubscribe only from given callback
@@ -24,47 +29,43 @@ const unsubscribeEvent = (event, callback) => {
     socket.off(event);
   }
 };
-//-----------------------------------------------
 //#endregion
-
-//#region  Chat
-//-----------------------------------------------
-export const subscribeChat = cb => {
-  socket.once(EVENTS.NEW_CHAT_MESSAGE, data => cb(data));
+//#region --------------------- Chat ---------------------
+export const subscribeChat = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.SEND_CHAT_MESSAGE, data => cb(data));
+  } else {
+    socket.on(EVENTS.SEND_CHAT_MESSAGE, data => cb(data));
+  }
 };
-
 export const unsubscribeChat = () => {
-  unsubscribeEvent(EVENTS.NEW_CHAT_MESSAGE);
+  unsubscribeEvent(EVENTS.SEND_CHAT_MESSAGE);
 };
-
 export const sendChat = message => {
-  socket.emit(EVENTS.NEW_CHAT_MESSAGE, message);
+  socket.emit(EVENTS.SEND_CHAT_MESSAGE, message);
 };
-//-----------------------------------------------
 //#endregion
+//#region --------------------- Audio ---------------------
 
-//#region  Audio
-//-----------------------------------------------
-const PORT = 5000;
 export const audioURL = `http://${window.location.hostname}:${PORT}/audio`;
-export const assetURL = `http://${window.location.hostname}:${PORT}/assets`;
 
-export const subscribeAudio = cb => {
-  socket.once(EVENTS.AUDIO_CHANGE, data => cb(data));
+export const subscribeAudio = (cb, once = false) => {
+  if (once) {
+    socket.once(EVENTS.CHANGE_AUDIO, data => cb(data));
+  } else {
+    socket.on(EVENTS.CHANGE_AUDIO, data => cb(data));
+  }
 };
 
 export const unsubscribeAudio = () => {
-  unsubscribeEvent(EVENTS.AUDIO_CHANGE);
+  unsubscribeEvent(EVENTS.CHANGE_AUDIO);
 };
 
 export const gm_Change_song = newSong => {
-  socket.emit(EVENTS.AUDIO_CHANGE, newSong);
+  socket.emit(EVENTS.CHANGE_AUDIO, newSong);
 };
-//-----------------------------------------------
 //#endregion
-
-//#region  Dice
-//-----------------------------------------------
+//#region --------------------- Dice ---------------------
 export const subscribeDice = cb => {
   socket.once(EVENTS.ROLL_DICE, data => cb(data));
 };
@@ -76,89 +77,82 @@ export const unsubscribeDice = () => {
 export const rollDice = diceString => {
   socket.emit(EVENTS.ROLL_DICE, diceString);
 };
-//-----------------------------------------------
 //#endregion
+//#region --------------------- Interaction with TableTop --------------------------
 
-//#region  Canvas
-//-----------------------------------------------
+/**
+ * Requests existing tabletop once and executes callback on response
+ * @param {callback} cb
+ */
+export const getExistingTableTop = cb => {
+  socket.once(EVENTS.REQUEST_EXISTING_TABLETOP, data => cb(data));
+  socket.emit(EVENTS.REQUEST_EXISTING_TABLETOP);
+};
+
 export const subscribeDrawings = (cb, once = false) => {
   if (once) {
-    socket.once(EVENTS.CANVAS, data => cb(data));
+    socket.once(EVENTS.SEND_NEW_DRAWING, data => cb(data));
   } else {
-    socket.on(EVENTS.CANVAS, data => cb(data));
+    socket.on(EVENTS.SEND_NEW_DRAWING, data => cb(data));
   }
 };
 
 export const unsubscribeDrawings = () => {
-  unsubscribeEvent(EVENTS.CANVAS);
+  unsubscribeEvent(EVENTS.SEND_NEW_DRAWING);
 };
 
-export const updateCanvas = obj => {
-  socket.emit(EVENTS.CANVAS, obj);
-};
-
-export const getCanvas = cb => {
-  socket.on(EVENTS.GETCANVAS, data => {
-    cb(data);
-    socket.off(EVENTS.GETCANVAS);
-  });
-  socket.emit(EVENTS.GETCANVAS);
+export const sendNewDrawing = obj => {
+  socket.emit(EVENTS.SEND_NEW_DRAWING, obj);
 };
 
 export const updateTokenCard = elt => {
-  console.log("API: UPDATE_TOKEN_CARD");
-  socket.emit(EVENTS.UPDATETOKENORCARD, elt);
+  socket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, elt);
 };
 
 export const subscribeTokenCards = (cb, once = false) => {
   if (once) {
-    socket.once(EVENTS.UPDATETOKENORCARD, data => cb(data));
+    socket.once(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
   } else {
-    socket.on(EVENTS.UPDATETOKENORCARD, data => cb(data));
+    socket.on(EVENTS.REQUEST_UPDATE_TOKENCARD, data => cb(data));
   }
 };
 
 export const deleteDrawing = id => {
-  socket.emit(EVENTS.REMOVECANVAS, id);
+  socket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
 };
 
 export const subscribeDeletions = (cb, once = false) => {
   if (once) {
-    socket.once(EVENTS.REMOVECANVAS, data => cb(data));
+    socket.once(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
   } else {
-    socket.on(EVENTS.REMOVECANVAS, data => cb(data));
+    socket.on(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
   }
 };
 
-export const unsubscribeDeletions = cb => {
-  unsubscribeEvent(EVENTS.REMOVECANVAS, cb);
+export const unsubscribeDeletions = () => {
+  unsubscribeEvent(EVENTS.REQUEST_DELETION_DRAWING);
 };
-//-----------------------------------------------
-//#endregion
 
-//#region  Cards
-//-----------------------------------------------
 export const drawCard = cb => {
-  socket.emit(EVENTS.DRAWCARD);
+  socket.emit(EVENTS.REQUEST_DRAW_CARD);
 
   subscribeCards(cb, true);
 };
 
 export const subscribeCards = (cb, once = false) => {
   if (once) {
-    socket.once(EVENTS.DRAWCARD, data => cb(data));
+    socket.once(EVENTS.REQUEST_DRAW_CARD, data => cb(data));
   } else {
-    socket.on(EVENTS.DRAWCARD, data => cb(data));
+    socket.on(EVENTS.REQUEST_DRAW_CARD, data => cb(data));
   }
 };
 
 //-----------------------------------------------
 //#endregion
-
-//#region  Other
-//-----------------------------------------------
+//#region --------------------- Other ---------------------
 export const changeName = newName => {
   socket.emit(EVENTS.COMMAND_NAME, newName);
 };
-//-----------------------------------------------
+
+export const assetURL = `http://${window.location.hostname}:${PORT}/assets`;
 //#endregion
