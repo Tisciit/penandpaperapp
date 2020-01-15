@@ -12,8 +12,6 @@ import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
 } from "../p5api";
 
-import joker from "./tokens/card-joker.svg";
-
 import { MODES } from "./Tabletop";
 
 export const sketch = p => {
@@ -318,8 +316,6 @@ export const sketch = p => {
         //As this is all new stuff, we needn´t check if tokens or cards already exist
         loadTokenOrCard(tC);
       }
-      const faker = { image: joker, type: "TOKEN" };
-      loadTokenOrCard(faker);
     });
 
     p.frameRate(30);
