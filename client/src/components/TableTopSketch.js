@@ -12,10 +12,12 @@ import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
 } from "../p5api";
 
+import joker from "./tokens/card-joker.svg";
+
 import { MODES } from "./Tabletop";
 
 export const sketch = p => {
-  /* ---------------------- Helper Functions ---------------------- */
+  //#region ---------------------- Helper Functions ----------------------
   function getTokenOrCardIndex(token_or_card) {
     const elt = tokenAndCards.find(elt => elt.id === token_or_card.id);
     return tokenAndCards.indexOf(elt);
@@ -30,12 +32,14 @@ export const sketch = p => {
       token_or_card.x = token_or_card.x || 0;
       token_or_card.y = token_or_card.y || 0;
       tokenAndCards.push(token_or_card);
+      drawTokenOrCards();
     });
   }
 
   function updateLocalTokenCard(index, x, y) {
     tokenAndCards[index].x = x;
     tokenAndCards[index].y = y;
+    drawTokenOrCards();
   }
 
   function getSelectedDrawing(x, y) {
@@ -123,6 +127,20 @@ export const sketch = p => {
     drawingLayer.pop();
   }
 
+  function drawTokenOrCards() {
+    tokenAndCardLayer.clear();
+    for (const token_or_card of tokenAndCards) {
+      const sizemodifier = token_or_card.type === "CARD" ? 0.4 : 1;
+      tokenAndCardLayer.image(
+        token_or_card.pImage,
+        token_or_card.x + xOff / zoom,
+        token_or_card.y + yOff / zoom,
+        (token_or_card.width * sizemodifier) / zoom,
+        (token_or_card.height * sizemodifier) / zoom
+      );
+    }
+  }
+
   function drawSelected() {
     if (selection.current) {
       drawDrawing(selection.current);
@@ -159,7 +177,20 @@ export const sketch = p => {
     }
     return anchors[minDistIndex];
   }
-  /* ---------------------- API EVents       ---------------------- */
+
+  function redrawSketch() {
+    p.clear();
+    const w = p.width * zoom;
+    const h = p.height * zoom;
+
+    p.image(backgroundLayer, xOff, yOff, w, h);
+    p.image(drawingLayer, xOff, yOff, w, h);
+    p.image(tempLayer, xOff, yOff, w, h);
+    p.image(tokenAndCardLayer, xOff, yOff, w, h);
+    p.image(tempLayer, xOff, yOff, w, h);
+  }
+  //#endregion
+  //#region ---------------------- API EVents       ----------------------
   subscribeTokenCards(array => {
     //If only one token or card comes in, make the value iterable
     const iterable = Array.isArray(array) ? array : [array];
@@ -195,7 +226,8 @@ export const sketch = p => {
       }
     }
   });
-  /* ---------------------- Sketch Variables ---------------------- */
+  //#endregion
+  //#region ---------------------- Sketch Variables ----------------------
 
   //#region CANVAS Related objects
 
@@ -204,7 +236,7 @@ export const sketch = p => {
   const anchors = []; //Center points of tiles in backgroundLayer
   let drawingLayer; //Contains the drawings
   let tempLayer; //Temporary layer for drawing-preview
-  const tokenAndCards = []; //Objects describing tokens and cards
+  let tokenAndCardLayer; //Contains tokens and cards
   let xOff = 0; //X Offset for when sketch is moved
   let yOff = 0; //Y Offset for when sketch is moved
   //#endregion
@@ -215,14 +247,16 @@ export const sketch = p => {
   //#endregion
 
   //Drawing Array & Point Buffer for Drawing
-  const drawings = [];
-  const points = [];
+  const drawings = []; //Objects describing the drawings on the cavas
+  const points = []; // Point Buffer when drawing new points
+  const tokenAndCards = []; //Objects describing tokens and cards
 
   //contains selection info
   const selection = {
     current: undefined
   };
-  /* ---------------------- Canvas Events    ---------------------- */
+  //#endregion
+  //#region ---------------------- Canvas Events    ----------------------
   p.setup = () => {
     const COLS = 160;
     const ROWS = 90;
@@ -259,15 +293,14 @@ export const sketch = p => {
     }
     //#endregion
 
-    //#region set up DrawingLayer
+    //#region Set up Other Layers aka Graphics Bufffers
     drawingLayer = p.createGraphics(width, height);
     drawingLayer.noFill();
-    drawingLayer.noLoop();
     tempLayer = p.createGraphics(width, height);
-    tempLayer.noLoop();
-
+    tokenAndCardLayer = p.createGraphics(width, height);
     //#endregion
 
+    //Initially get all content from server
     getCanvas(allContent => {
       const { drawing, tokenCards } = allContent;
 
@@ -282,8 +315,11 @@ export const sketch = p => {
       }
 
       for (const tC of tokenCards) {
+        //As this is all new stuff, we needn´t check if tokens or cards already exist
         loadTokenOrCard(tC);
       }
+      const faker = { image: joker, type: "TOKEN" };
+      loadTokenOrCard(faker);
     });
 
     p.frameRate(30);
@@ -296,25 +332,7 @@ export const sketch = p => {
   };
 
   p.draw = () => {
-    p.clear();
-    const w = p.width * zoom;
-    const h = p.height * zoom;
-
-    p.image(backgroundLayer, xOff, yOff, w, h);
-    p.image(drawingLayer, xOff, yOff, w, h);
-    p.image(tempLayer, xOff, yOff, w, h);
-
-    for (const elt of tokenAndCards) {
-      const sizemodifier = elt.type === "CARD" ? 0.4 : 1;
-      p.image(
-        elt.pImage,
-        elt.x + xOff / zoom,
-        elt.y + yOff / zoom,
-        (elt.width * sizemodifier) / zoom,
-        (elt.height * sizemodifier) / zoom
-      );
-    }
-
+    redrawSketch();
     const x = p.mouseX / zoom;
     const y = p.mouseY / zoom;
     const prevX = p.pmouseX / zoom;
@@ -324,6 +342,7 @@ export const sketch = p => {
     const relYOff = yOff / zoom;
 
     switch (mode) {
+      //#region MODES.DRAW
       case MODES.DRAW:
         if (p.mouseIsPressed) {
           //If drawing off canvas return
@@ -338,16 +357,17 @@ export const sketch = p => {
             tempLayer.clear();
           }
         }
-
         break;
-
+      //#endregion
+      //#region MODES.DRAG
       case MODES.DRAG:
         if (p.mouseIsPressed) {
           xOff += x - prevX;
           yOff += y - prevY;
         }
         break;
-
+      //#endregion
+      //#region MODES.SELECT
       case MODES.SELECT:
         if (p.mouseIsPressed) {
           const selectedDrawing = getSelectedDrawing(
@@ -364,7 +384,8 @@ export const sketch = p => {
           }
         }
         break;
-
+      //#endregion
+      //#region MODES.DRAGELEMENTS
       case MODES.DRAGELEMENTS:
         if (p.mouseIsPressed) {
           if (!selection.current) {
@@ -390,11 +411,12 @@ export const sketch = p => {
               default:
                 break;
             }
+            drawTokenOrCards();
           }
         } else {
           //If an object has been selected, send changes to the server
           if (selection.current) {
-            const { x, y, id, type } = selection.current;
+            const { x, y, id } = selection.current;
             updateTokenCard({
               x,
               y,
@@ -404,6 +426,7 @@ export const sketch = p => {
           selection.current = undefined;
         }
         break;
+      //#endregion
 
       default:
         break;
@@ -416,6 +439,7 @@ export const sketch = p => {
         //46 is Delete key
         if (e.keyCode === 46 && selection.current) {
           deleteDrawing(selection.current.id);
+          selection.current = undefined;
         } else if (e.keyCode === 68) {
           //Draw card
           drawCard(() => {});
@@ -427,3 +451,4 @@ export const sketch = p => {
     }
   };
 };
+//#endregion
