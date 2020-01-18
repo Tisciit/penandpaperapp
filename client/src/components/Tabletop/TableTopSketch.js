@@ -283,7 +283,8 @@ export const sketch = p => {
   //contains selection info
   const selection = {
     current: undefined,
-    mouseInfo: { x: undefined, y: undefined, button: undefined }
+    mouseInfo: { x: undefined, y: undefined, button: undefined },
+    offset: { x: undefined, y: undefined }
   };
   //#endregion
   //#region ---------------------- Canvas Events    ----------------------
@@ -353,6 +354,12 @@ export const sketch = p => {
     });
 
     p.frameRate(30);
+    console.log(p.canvas);
+
+    //disable right click for canvas
+    p.canvas.oncontextmenu = event => {
+      event.preventDefault();
+    };
   };
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
@@ -501,9 +508,12 @@ export const sketch = p => {
 
     tempLayer.clear();
     //Set Info Object where Mouse has been pressed.
-    selection.mouseInfo.x = p.mouseX;
-    selection.mouseInfo.y = p.mouseY;
+    const { x, y } = getRelativeCoords();
+    selection.mouseInfo.x = x;
+    selection.mouseInfo.y = y;
     selection.mouseInfo.button = p.mouseButton;
+    selection.offset.x = xOff;
+    selection.offset.y = yOff;
 
     if (p.mouseButton === p.CENTER) {
       //Toggle between select and draw
@@ -512,6 +522,12 @@ export const sketch = p => {
       } else if (mode === MODES.DRAW) {
         fChangeMode(MODES.SELECT);
       }
+
+      return;
+    }
+
+    if (p.mouseButton === p.RIGHT) {
+      const selected = getSelectedDrawing();
     }
   };
 
@@ -530,6 +546,9 @@ export const sketch = p => {
     selection.mouseInfo.x = undefined;
     selection.mouseInfo.y = undefined;
     selection.mouseInfo.button = undefined;
+
+    selection.offset.x = undefined;
+    selection.offset.y = undefined;
   };
 
   p.mouseDragged = e => {
@@ -537,15 +556,18 @@ export const sketch = p => {
     if (!mouseWithInParent() || p.EventWithinFrameFired) return;
     p.EventWithinFrameFired = true;
 
-    const { x, y, relXOff, relYOff } = getRelativeCoords();
+    const { x, y, prevX, prevY, relXOff, relYOff } = getRelativeCoords();
     const originX = selection.mouseInfo.x;
     const originY = selection.mouseInfo.y;
     const button = selection.mouseInfo.button;
+    const originXOff = selection.offset.x;
+    const originYOff = selection.offset.y;
 
     //MOVE
+    console.log(x - originX);
     if (button === "right") {
-      xOff = x - originX;
-      yOff = y - originY;
+      xOff = originXOff + x - originX;
+      yOff = originYOff + y - originY;
       return;
     }
 
@@ -554,7 +576,12 @@ export const sketch = p => {
 
       tempLayer.clear();
       tempLayer.fill(p.color(0, 0, 100, 50));
-      tempLayer.rect(originX - xOff, originY - yOff, x - originX, y - originY);
+      tempLayer.rect(
+        originX - relXOff,
+        originY - relYOff,
+        x - originX,
+        y - originY
+      );
       return;
     }
 
