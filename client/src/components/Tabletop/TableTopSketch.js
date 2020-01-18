@@ -178,14 +178,38 @@ export const sketch = p => {
 
   function redrawSketch() {
     p.clear();
-    const w = p.width * zoom;
-    const h = p.height * zoom;
+    const w = tableTopWidth * zoom;
+    const h = tableTopHeight * zoom;
 
     p.image(backgroundLayer, xOff, yOff, w, h);
     p.image(drawingLayer, xOff, yOff, w, h);
     p.image(tempLayer, xOff, yOff, w, h);
     p.image(tokenAndCardLayer, xOff, yOff, w, h);
     p.image(tempLayer, xOff, yOff, w, h);
+  }
+
+  function getRelativeCoords() {
+    const x = p.mouseX / zoom;
+    const y = p.mouseY / zoom;
+    const prevX = p.pmouseX / zoom;
+    const prevY = p.pmouseY / zoom;
+
+    const relXOff = xOff / zoom;
+    const relYOff = yOff / zoom;
+    return {
+      x,
+      y,
+      prevX,
+      prevY,
+      relXOff,
+      relYOff
+    };
+  }
+
+  function mouseWithInParent() {
+    const x = p.mouseX;
+    const y = p.mouseY;
+    return x >= 0 && x <= parentWidth && y >= 0 && y <= parentHeight;
   }
   //#endregion
   //#region ---------------------- API EVents       ----------------------
@@ -230,6 +254,10 @@ export const sketch = p => {
   //#region CANVAS Related objects
 
   const RADIUS = 40; //default Size for Hex-Tiles
+  let tableTopWidth;
+  let tableTopHeight;
+  let parentWidth;
+  let parentHeight;
   let backgroundLayer; //Contains the hex-grid
   const anchors = []; //Center points of tiles in backgroundLayer
   let drawingLayer; //Contains the drawings
@@ -242,6 +270,8 @@ export const sketch = p => {
   //#region VARIABLES WHICH HOLD PROPS
   let mode;
   let zoom;
+  let fZoomIn;
+  let fZoomOut;
   //#endregion
 
   //Drawing Array & Point Buffer for Drawing
@@ -251,7 +281,9 @@ export const sketch = p => {
 
   //contains selection info
   const selection = {
-    current: undefined
+    current: undefined,
+    mousePressedOrigin: { x: undefined, y: undefined },
+    mouseInfo: { button: undefined }
   };
   //#endregion
   //#region ---------------------- Canvas Events    ----------------------
@@ -260,7 +292,9 @@ export const sketch = p => {
     const ROWS = 90;
     const width = RADIUS * COLS;
     const height = RADIUS * ROWS;
-    p.createCanvas(width, height);
+    tableTopWidth = width;
+    tableTopHeight = height;
+    p.createCanvas(parentWidth, parentHeight);
     backgroundLayer = p.createGraphics(width, height);
 
     const h = RADIUS * Math.sin(Math.PI / 3);
@@ -318,118 +352,137 @@ export const sketch = p => {
       }
     });
 
-    p.frameRate(30);
+    p.frameRate(120);
   };
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
+    console.log("PROPS HANDLER");
     mode = props.mode;
     zoom = props.zoom;
+    fZoomIn = props.zoomIn;
+    fZoomOut = props.zoomOut;
+    const container = document.querySelector(props.container);
+    parentWidth = container.clientWidth;
+    parentHeight = container.clientHeight;
     selection.current = undefined;
   };
 
   p.draw = () => {
     redrawSketch();
+    p.EventWithinFrameFired = false;
+    // const { x, y, prevX, prevY, relXOff, relYOff } = getRelativeCoords();
+
+    // switch (mode) {
+    //   //#region MODES.DRAW
+    //   case MODES.DRAW:
+    //     if (p.mouseIsPressed) {
+    //       //If drawing off canvas return
+    //       if (x < 0 || y < 0) return;
+    //       points.push({ x: x - relXOff, y: y - relYOff });
+    //       tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
+    //     } else {
+    //       if (points.length > 0) {
+    //         const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
+    //         sendNewDrawing(obj);
+    //         points.splice(0, points.length);
+    //         tempLayer.clear();
+    //       }
+    //     }
+    //     break;
+    //   //#endregion
+    //   //#region MODES.DRAG
+    //   case MODES.DRAG:
+    //     if (p.mouseIsPressed) {
+    //       xOff += x - prevX;
+    //       yOff += y - prevY;
+    //     }
+    //     break;
+    //   //#endregion
+    //   //#region MODES.SELECT
+    //   case MODES.SELECT:
+    //     if (p.mouseIsPressed) {
+    //       tempLayer.clear();
+    //       tempLayer.fill(p.color(0, 0, 20, 50));
+    //       tempLayer.rect(0, 0, x, y);
+    //       const selectedDrawing = getSelectedDrawing(
+    //         x - xOff / zoom,
+    //         y - yOff / zoom
+    //       );
+    //       const copy = JSON.parse(JSON.stringify(selectedDrawing));
+    //       if (copy.type !== "none") {
+    //         //Redraw previuosly selected drawing
+    //         drawSelected();
+    //         copy.stroke.color = { r: 0, g: 0, b: 255 };
+    //         drawDrawing(copy);
+    //         selection.current = selectedDrawing;
+    //       }
+    //     }
+    //     break;
+    //   //#endregion
+    //   //#region MODES.DRAGELEMENTS
+    //   case MODES.DRAGELEMENTS:
+    //     if (p.mouseIsPressed) {
+    //       if (!selection.current) {
+    //         const elt = getTokenCard(x, y);
+    //         if (elt.type) {
+    //           selection.current = elt;
+    //         }
+    //       } else {
+    //         const { type } = selection.current;
+    //         //SNAP TO ANCHORS
+    //         switch (type) {
+    //           case "TOKEN":
+    //             const newPoint = getNextAnchor(x, y);
+    //             selection.current.x = newPoint.x - selection.current.width / 2;
+    //             selection.current.y = newPoint.y - selection.current.height / 2;
+    //             break;
+
+    //           case "CARD":
+    //             selection.current.x += x - prevX;
+    //             selection.current.y += y - prevY;
+    //             break;
+
+    //           default:
+    //             break;
+    //         }
+    //         drawTokenOrCards();
+    //       }
+    //     } else {
+    //       //If an object has been selected, send changes to the server
+    //       if (selection.current) {
+    //         const { x, y, id } = selection.current;
+    //         updateTokenCard({
+    //           x,
+    //           y,
+    //           id
+    //         });
+    //       }
+    //       selection.current = undefined;
+    //     }
+    //     break;
+    //   //#endregion
+
+    //   default:
+    //     break;
+    // }
+  };
+
+  p.mouseWheel = e => {
+    if (!mouseWithInParent()) return;
+    if (e.delta > 0) {
+      //SCROLLING DOWN
+      fZoomIn();
+    } else {
+      fZoomOut();
+    }
+  };
+
+  p.keyPressed = e => {
     const x = p.mouseX / zoom;
     const y = p.mouseY / zoom;
     const prevX = p.pmouseX / zoom;
     const prevY = p.pmouseY / zoom;
 
-    const relXOff = xOff / zoom;
-    const relYOff = yOff / zoom;
-
-    switch (mode) {
-      //#region MODES.DRAW
-      case MODES.DRAW:
-        if (p.mouseIsPressed) {
-          //If drawing off canvas return
-          if (x < 0 || y < 0) return;
-          points.push({ x: x - relXOff, y: y - relYOff });
-          tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
-        } else {
-          if (points.length > 0) {
-            const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-            sendNewDrawing(obj);
-            points.splice(0, points.length);
-            tempLayer.clear();
-          }
-        }
-        break;
-      //#endregion
-      //#region MODES.DRAG
-      case MODES.DRAG:
-        if (p.mouseIsPressed) {
-          xOff += x - prevX;
-          yOff += y - prevY;
-        }
-        break;
-      //#endregion
-      //#region MODES.SELECT
-      case MODES.SELECT:
-        if (p.mouseIsPressed) {
-          const selectedDrawing = getSelectedDrawing(
-            x - xOff / zoom,
-            y - yOff / zoom
-          );
-          const copy = JSON.parse(JSON.stringify(selectedDrawing));
-          if (copy.type !== "none") {
-            //Redraw previuosly selected drawing
-            drawSelected();
-            copy.stroke.color = { r: 0, g: 0, b: 255 };
-            drawDrawing(copy);
-            selection.current = selectedDrawing;
-          }
-        }
-        break;
-      //#endregion
-      //#region MODES.DRAGELEMENTS
-      case MODES.DRAGELEMENTS:
-        if (p.mouseIsPressed) {
-          if (!selection.current) {
-            const elt = getTokenCard(x, y);
-            if (elt.type) {
-              selection.current = elt;
-            }
-          } else {
-            const { type } = selection.current;
-            //SNAP TO ANCHORS
-            switch (type) {
-              case "TOKEN":
-                const newPoint = getNextAnchor(x, y);
-                selection.current.x = newPoint.x - selection.current.width / 2;
-                selection.current.y = newPoint.y - selection.current.height / 2;
-                break;
-
-              case "CARD":
-                selection.current.x += x - prevX;
-                selection.current.y += y - prevY;
-                break;
-
-              default:
-                break;
-            }
-            drawTokenOrCards();
-          }
-        } else {
-          //If an object has been selected, send changes to the server
-          if (selection.current) {
-            const { x, y, id } = selection.current;
-            updateTokenCard({
-              x,
-              y,
-              id
-            });
-          }
-          selection.current = undefined;
-        }
-        break;
-      //#endregion
-
-      default:
-        break;
-    }
-  };
-
-  p.keyPressed = e => {
     switch (mode) {
       case MODES.SELECT:
         //46 is Delete key
@@ -444,6 +497,52 @@ export const sketch = p => {
 
       default:
         break;
+    }
+  };
+
+  p.mousePressed = e => {
+    if (!mouseWithInParent()) return;
+
+    tempLayer.clear();
+    //Set Info Object where Mouse has been pressed.
+    const x = p.mouseX;
+    const y = p.mouseY;
+    selection.mousePressedOrigin.x = x;
+    selection.mousePressedOrigin.y = y;
+    selection.mouseInfo.button = p.mouseButton;
+  };
+
+  p.mouseReleased = e => {
+    //Clean up mousepressedorigin
+
+    selection.mousePressedOrigin.x = undefined;
+    selection.mousePressedOrigin.y = undefined;
+  };
+
+  p.mouseDragged = e => {
+    //Limit event Firing to frameRate for performance
+    if (!mouseWithInParent() || p.EventWithinFrameFired) return;
+    p.EventWithinFrameFired = true;
+
+    const { x, y } = getRelativeCoords();
+    const originX = selection.mousePressedOrigin.x;
+    const originY = selection.mousePressedOrigin.y;
+    const button = selection.mouseInfo.button;
+
+    //MOVE
+    if (button === "right") {
+      xOff = x - originX;
+      yOff = y - originY;
+      return;
+    }
+
+    if (mode === MODES.SELECT) {
+      if (!originX || !originY) return;
+
+      tempLayer.clear();
+      tempLayer.fill(p.color(0, 0, 100, 50));
+      tempLayer.rect(originX - xOff, originY - yOff, x - originX, y - originY);
+      return;
     }
   };
 };

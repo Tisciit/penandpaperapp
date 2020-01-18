@@ -15,6 +15,14 @@ export const Tabletop = () => {
   const [mode, setMode] = useState(MODES.SELECT);
   const [zoom, setZoom] = useState(1);
 
+  const zoomIn = () => {
+    setZoom(zoom - 0.01);
+  };
+
+  const zoomOut = () => {
+    setZoom(zoom + 0.01);
+  };
+
   return (
     <div className="tabletopWrapper">
       <div className="Controls">
@@ -50,20 +58,10 @@ export const Tabletop = () => {
         >
           Drag Stuff
         </button>
-        <button
-          className="btn_round"
-          onClick={() => {
-            setZoom(zoom + 0.01);
-          }}
-        >
+        <button className="btn_round" onClick={zoomOut}>
           -
         </button>
-        <button
-          className="btn_round"
-          onClick={() => {
-            setZoom(zoom - 0.01);
-          }}
-        >
+        <button className="btn_round" onClick={zoomIn}>
           +
         </button>
         {zoom}
@@ -71,7 +69,14 @@ export const Tabletop = () => {
         {mode}
       </div>
       <div className="sketchContainer">
-        <P5Wrapper mode={mode} zoom={zoom} sketch={sketch} />
+        <P5Wrapper
+          container=".sketchContainer"
+          zoomIn={zoomIn}
+          zoomOut={zoomOut}
+          mode={mode}
+          zoom={zoom}
+          sketch={sketch}
+        />
       </div>
       <ImageSelector />
     </div>
