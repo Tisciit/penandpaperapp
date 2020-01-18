@@ -272,6 +272,7 @@ export const sketch = p => {
   let zoom;
   let fZoomIn;
   let fZoomOut;
+  let fChangeMode;
   //#endregion
 
   //Drawing Array & Point Buffer for Drawing
@@ -282,8 +283,7 @@ export const sketch = p => {
   //contains selection info
   const selection = {
     current: undefined,
-    mousePressedOrigin: { x: undefined, y: undefined },
-    mouseInfo: { button: undefined }
+    mouseInfo: { x: undefined, y: undefined, button: undefined }
   };
   //#endregion
   //#region ---------------------- Canvas Events    ----------------------
@@ -352,7 +352,7 @@ export const sketch = p => {
       }
     });
 
-    p.frameRate(120);
+    p.frameRate(30);
   };
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
@@ -361,6 +361,7 @@ export const sketch = p => {
     zoom = props.zoom;
     fZoomIn = props.zoomIn;
     fZoomOut = props.zoomOut;
+    fChangeMode = props.changeMode;
     const container = document.querySelector(props.container);
     parentWidth = container.clientWidth;
     parentHeight = container.clientHeight;
@@ -478,11 +479,6 @@ export const sketch = p => {
   };
 
   p.keyPressed = e => {
-    const x = p.mouseX / zoom;
-    const y = p.mouseY / zoom;
-    const prevX = p.pmouseX / zoom;
-    const prevY = p.pmouseY / zoom;
-
     switch (mode) {
       case MODES.SELECT:
         //46 is Delete key
@@ -505,18 +501,35 @@ export const sketch = p => {
 
     tempLayer.clear();
     //Set Info Object where Mouse has been pressed.
-    const x = p.mouseX;
-    const y = p.mouseY;
-    selection.mousePressedOrigin.x = x;
-    selection.mousePressedOrigin.y = y;
+    selection.mouseInfo.x = p.mouseX;
+    selection.mouseInfo.y = p.mouseY;
     selection.mouseInfo.button = p.mouseButton;
+
+    if (p.mouseButton === p.CENTER) {
+      //Toggle between select and draw
+      if (mode === MODES.SELECT) {
+        fChangeMode(MODES.DRAW);
+      } else if (mode === MODES.DRAW) {
+        fChangeMode(MODES.SELECT);
+      }
+    }
   };
 
   p.mouseReleased = e => {
     //Clean up mousepressedorigin
 
-    selection.mousePressedOrigin.x = undefined;
-    selection.mousePressedOrigin.y = undefined;
+    //#region Handle Draw
+    if (points.length > 0) {
+      const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
+      sendNewDrawing(obj);
+      points.splice(0, points.length);
+      tempLayer.clear();
+    }
+    //#endregion
+
+    selection.mouseInfo.x = undefined;
+    selection.mouseInfo.y = undefined;
+    selection.mouseInfo.button = undefined;
   };
 
   p.mouseDragged = e => {
@@ -524,9 +537,9 @@ export const sketch = p => {
     if (!mouseWithInParent() || p.EventWithinFrameFired) return;
     p.EventWithinFrameFired = true;
 
-    const { x, y } = getRelativeCoords();
-    const originX = selection.mousePressedOrigin.x;
-    const originY = selection.mousePressedOrigin.y;
+    const { x, y, relXOff, relYOff } = getRelativeCoords();
+    const originX = selection.mouseInfo.x;
+    const originY = selection.mouseInfo.y;
     const button = selection.mouseInfo.button;
 
     //MOVE
@@ -542,6 +555,12 @@ export const sketch = p => {
       tempLayer.clear();
       tempLayer.fill(p.color(0, 0, 100, 50));
       tempLayer.rect(originX - xOff, originY - yOff, x - originX, y - originY);
+      return;
+    }
+
+    if (mode === MODES.DRAW) {
+      points.push({ x: x - relXOff, y: y - relYOff });
+      tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
       return;
     }
   };

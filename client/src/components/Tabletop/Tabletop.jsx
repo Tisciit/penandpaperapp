@@ -23,6 +23,10 @@ export const Tabletop = () => {
     setZoom(zoom + 0.01);
   };
 
+  const changeMode = newMode => {
+    setMode(newMode);
+  };
+
   return (
     <div className="tabletopWrapper">
       <div className="Controls">
@@ -73,6 +77,7 @@ export const Tabletop = () => {
           container=".sketchContainer"
           zoomIn={zoomIn}
           zoomOut={zoomOut}
+          changeMode={changeMode}
           mode={mode}
           zoom={zoom}
           sketch={sketch}
