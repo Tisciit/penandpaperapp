@@ -78,7 +78,7 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.SEND_NEW_DRAWING, object => {
-    console.log(client, EVENTS.SEND_NEW_DRAWING);
+    console.log(`Client ${client.id} sent new drawing`)
     object.id = drawingId++;
     drawing.push(object);
     ioSocket.emit(EVENTS.SEND_NEW_DRAWING, object);

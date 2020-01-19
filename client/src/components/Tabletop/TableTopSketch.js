@@ -41,48 +41,75 @@ export const sketch = p => {
     drawTokenOrCards();
   }
 
-  function getSelectedDrawing(x, y) {
-    let tolerance = 1;
+  function getSelectedTableTopElements(x, y, w, h) {
+    if (!x || !y) return "Oof";
 
-    for (let obj of drawings) {
-      if (obj === undefined) continue;
-      const { type } = obj;
-
-      switch (type) {
-        case "SHAPE":
-          const { stroke, points } = obj;
-
-          if (stroke) {
-            tolerance += stroke.weight;
+    function getTokenCards(x, y, arr) {
+      for (const elt of tokenAndCards) {
+        if (
+          x >= elt.x &&
+          x <= elt.x + elt.width &&
+          y >= elt.y &&
+          y <= elt.y + elt.height
+        ) {
+          if (arr) {
+            arr.push(elt);
+          } else {
+            return elt;
           }
+        }
+      }
+    }
+    function getDrawings(x, y, arr) {
+      let tolerance = 1;
+      for (const elt of drawings) {
+        if (elt === undefined) continue;
 
-          for (let p of points) {
-            if (
-              p.x < x + tolerance &&
-              p.x > x - tolerance &&
-              p.y < y + tolerance &&
-              p.y > y - tolerance
-            ) {
-              return obj;
+        let found;
+        const { type } = elt;
+
+        switch (type) {
+          case "SHAPE":
+            const { stroke, points } = elt;
+
+            if (stroke) {
+              tolerance += stroke.weight;
             }
-          }
-          break;
 
-        case "RECTANGLE":
-          break;
+            for (let p of points) {
+              if (
+                p.x < x + tolerance &&
+                p.x > x - tolerance &&
+                p.y < y + tolerance &&
+                p.y > y - tolerance
+              ) {
+                found = elt;
+              }
+            }
+            break;
+          default:
+            break;
+        }
 
-        case "ELLIPSE":
-          break;
-
-        case "LINE":
-          break;
-
-        default:
-          break;
+        if (arr && found) {
+          arr.push(found);
+        } else if (found) {
+          return found;
+        }
       }
     }
 
-    return { type: "none" };
+    //Single Item selection as no range is specified
+    if (!w || !h) {
+      let element = getDrawings(x, y);
+      if (!element) {
+        element = getTokenCards(x, y);
+      }
+    } else {
+      //Multi-Selection
+      const elements = [];
+      getDrawings(x, y, w, h, elements);
+    }
   }
 
   function drawDrawing(drawing) {
@@ -145,21 +172,6 @@ export const sketch = p => {
     }
   }
 
-  function getTokenCard(x, y) {
-    for (const elt of tokenAndCards) {
-      if (
-        x >= elt.x &&
-        x <= elt.x + elt.width &&
-        y >= elt.y &&
-        y <= elt.y + elt.height
-      ) {
-        return elt;
-      }
-    }
-
-    return { type: undefined };
-  }
-
   function getNextAnchor(x, y) {
     let minDist = Infinity;
     let minDistIndex = -1;
@@ -217,15 +229,12 @@ export const sketch = p => {
     //If only one token or card comes in, make the value iterable
     const iterable = Array.isArray(array) ? array : [array];
 
-    console.log(iterable);
     for (const elt of iterable) {
       /* Check if token or card is available locally */
       const index = getTokenOrCardIndex(elt);
       if (index !== -1) {
-        console.log("Updating card");
         updateLocalTokenCard(index, elt.x, elt.y);
       } else {
-        console.log("Loading new card");
         loadTokenOrCard(elt);
       }
     }
@@ -337,9 +346,6 @@ export const sketch = p => {
     getExistingTableTop(allContent => {
       const { drawing, tokenCards } = allContent;
 
-      console.log("Drawings", drawing);
-      console.log("Tokens and Cards", tokenCards);
-
       drawings.splice(0, drawings.length);
       drawings.push(...drawing);
 
@@ -354,7 +360,6 @@ export const sketch = p => {
     });
 
     p.frameRate(30);
-    console.log(p.canvas);
 
     //disable right click for canvas
     p.canvas.oncontextmenu = event => {
@@ -363,7 +368,6 @@ export const sketch = p => {
   };
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
-    console.log("PROPS HANDLER");
     mode = props.mode;
     zoom = props.zoom;
     fZoomIn = props.zoomIn;
@@ -527,7 +531,7 @@ export const sketch = p => {
     }
 
     if (p.mouseButton === p.RIGHT) {
-      const selected = getSelectedDrawing();
+      //const selected = getSelectedDrawing();
     }
   };
 
@@ -564,7 +568,6 @@ export const sketch = p => {
     const originYOff = selection.offset.y;
 
     //MOVE
-    console.log(x - originX);
     if (button === "right") {
       xOff = originXOff + x - originX;
       yOff = originYOff + y - originY;
@@ -593,3 +596,19 @@ export const sketch = p => {
   };
 };
 //#endregion
+
+/** LIST O BIG TODOs
+ * Consider sending Drawings as images to the server: https://github.com/processing/p5.js/issues/2841 
+ *          for(let p of drawing points){
+ *            find smallest and greatest x and y coords
+ *          }
+ *          for(let p of drawing points) {
+ *            p.x -= smallest x
+ *            p.y -= smallest y
+ *          }
+ *          p5 Create Image greatest x greatest y
+ *          image.x = smallest x
+ *          image.y = smallest y
+ *          
+ *          
+ */
