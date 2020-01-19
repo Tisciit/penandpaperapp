@@ -5,7 +5,9 @@ let remainingCards;
 
 exports.newDeck = () => {
   return new Promise((resolve, reject) => {
-    fetch("https://deckofcardsapi.com/api/deck/new/shuffle/?jokers_enabled=true")
+    fetch(
+      "https://deckofcardsapi.com/api/deck/new/shuffle/?jokers_enabled=true"
+    )
       .then(res => res.json())
       .then(json => {
         const { success, deck_id, remaining } = json;
@@ -17,6 +19,9 @@ exports.newDeck = () => {
           remainingCards = remaining;
           resolve("Success!");
         }
+      })
+      .catch(err => {
+        reject(err);
       });
   });
 };
@@ -37,7 +42,8 @@ exports.shuffleDeck = () => {
           remainingCards = remaining;
           resolve("Success!");
         }
-      });
+      })
+      .catch(err => reject(err));
   });
 };
 
@@ -58,6 +64,7 @@ exports.drawCards = (count = 1) => {
         } else {
           resolve(cards);
         }
-      });
+      })
+      .catch(err => reject(err));
   });
 };

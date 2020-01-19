@@ -36,7 +36,10 @@ const EVENTS = {
   REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD",
   REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
 };
-deckapi.shuffleDeck();
+deckapi
+  .shuffleDeck()
+  .then(data => console.log(data))
+  .catch(err => console.log(err));
 
 //#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {
