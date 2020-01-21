@@ -172,6 +172,48 @@ export const sketch = p => {
     }
   }
 
+  function pointsToImage(points) {
+    function analyzePoints(points) {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = 0;
+      let maxY = 0;
+
+      for (const p of points) {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.min(maxY, p.y);
+      }
+
+      return { minX, maxX, minY, maxY };
+    }
+
+    const { minX, maxX, minY, maxY } = analyzePoints(points);
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const gb = p.createGraphics(width, height);
+    gb.beginShape();
+    const updatedPoints = [];
+    for (const p of updatePoints) {
+      const x = p.x - minX;
+      const y = p.y - minY;
+      updatedPoints.push({ x, y });
+      gb.vertex(x, y);
+    }
+    gb.endShape();
+
+    const image = p.createImage(width, height);
+    image.copy(gb, 0, 0, width, height, 0, 0, width, height);
+
+    image.x = minX;
+    image.y = minY;
+    image.points = updatedPoints;
+
+    return image;
+  }
+
   function getNextAnchor(x, y) {
     let minDist = Infinity;
     let minDistIndex = -1;
@@ -598,7 +640,7 @@ export const sketch = p => {
 //#endregion
 
 /** LIST O BIG TODOs
- * Consider sending Drawings as images to the server: https://github.com/processing/p5.js/issues/2841 
+ * Consider sending Drawings as images to the server: https://github.com/processing/p5.js/issues/2841
  *          for(let p of drawing points){
  *            find smallest and greatest x and y coords
  *          }
@@ -609,6 +651,6 @@ export const sketch = p => {
  *          p5 Create Image greatest x greatest y
  *          image.x = smallest x
  *          image.y = smallest y
- *          
- *          
+ *
+ *
  */
