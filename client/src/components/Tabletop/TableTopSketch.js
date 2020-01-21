@@ -114,43 +114,23 @@ export const sketch = p => {
 
   function drawDrawing(drawing) {
     if (drawing === undefined) return;
-    const { type } = drawing;
 
-    drawingLayer.push();
-    switch (type) {
-      case "SHAPE":
-        const { stroke, fill, points, shape_close } = drawing;
-        drawingLayer.beginShape();
-
-        if (stroke) {
-          drawingLayer.strokeWeight(stroke.weight);
-          drawingLayer.stroke(stroke.color.r, stroke.color.g, stroke.color.b);
-        }
-        if (fill.color) {
-          drawingLayer.fill(fill.color.r, fill.color.g, fill.color.b);
-        }
-
-        for (let p of points) {
-          drawingLayer.vertex(p.x, p.y);
-        }
-        if (shape_close) drawingLayer.endShape(drawingLayer.CLOSE);
-        else drawingLayer.endShape();
-        break;
-
-      case "RECTANGLE":
-        break;
-
-      case "ELLIPSE":
-        break;
-
-      case "LINE":
-        break;
-
-      default:
-        console.error(`Unrecognized shape ${type}`);
-        break;
+    let img = p.createImage(drawing.w, drawing.h);
+    console.log(img);
+    console.log(drawing);
+    img.loadPixels();
+    for (let i = 0; i < img.pixels.length; i++) {
+      img.pixels[i] = drawing.pixels[i];
     }
-    drawingLayer.pop();
+    img.updatePixels();
+
+    drawingLayer.image(
+      img,
+      drawing.x,
+      drawing.y,
+      drawing.width,
+      drawing.height
+    );
   }
 
   function drawTokenOrCards() {
@@ -183,7 +163,7 @@ export const sketch = p => {
         minX = Math.min(minX, p.x);
         maxX = Math.max(maxX, p.x);
         minY = Math.min(minY, p.y);
-        maxY = Math.min(maxY, p.y);
+        maxY = Math.max(maxY, p.y);
       }
 
       return { minX, maxX, minY, maxY };
@@ -191,27 +171,41 @@ export const sketch = p => {
 
     const { minX, maxX, minY, maxY } = analyzePoints(points);
 
-    const width = maxX - minX;
-    const height = maxY - minY;
+    //Outside strokes would be cut off, therefore we need to add them to the width
+    const STROKEWEIGHT = 5;
+    const TWO_SW = STROKEWEIGHT * 2;
+
+    const width = Math.floor(maxX - minX + TWO_SW);
+    const height = Math.floor(maxY - minY + TWO_SW);
+    
     const gb = p.createGraphics(width, height);
+
+    //TODO: Drawing options
+    gb.noFill();
+    gb.stroke(p.color(255, 0, 255));
+    gb.strokeWeight(5);
+
     gb.beginShape();
     const updatedPoints = [];
-    for (const p of updatePoints) {
-      const x = p.x - minX;
-      const y = p.y - minY;
+    for (const p of points) {
+      const x = p.x - minX + STROKEWEIGHT;
+      const y = p.y - minY + STROKEWEIGHT;
       updatedPoints.push({ x, y });
       gb.vertex(x, y);
     }
     gb.endShape();
 
-    const image = p.createImage(width, height);
-    image.copy(gb, 0, 0, width, height, 0, 0, width, height);
+    gb.loadPixels();
 
-    image.x = minX;
-    image.y = minY;
-    image.points = updatedPoints;
-
-    return image;
+    //Drawing will be offset by the strokeweight, so we need to "re-offset" the coords
+    return {
+      x: minX - STROKEWEIGHT,
+      y: minY - STROKEWEIGHT,
+      w: width,
+      h: height,
+      points: updatedPoints,
+      pixels: gb.pixels
+    };
   }
 
   function getNextAnchor(x, y) {
@@ -582,8 +576,9 @@ export const sketch = p => {
 
     //#region Handle Draw
     if (points.length > 0) {
-      const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-      sendNewDrawing(obj);
+      const img = pointsToImage(points);
+      //const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
+      sendNewDrawing(img);
       points.splice(0, points.length);
       tempLayer.clear();
     }
@@ -636,21 +631,6 @@ export const sketch = p => {
       return;
     }
   };
-};
-//#endregion
 
-/** LIST O BIG TODOs
- * Consider sending Drawings as images to the server: https://github.com/processing/p5.js/issues/2841
- *          for(let p of drawing points){
- *            find smallest and greatest x and y coords
- *          }
- *          for(let p of drawing points) {
- *            p.x -= smallest x
- *            p.y -= smallest y
- *          }
- *          p5 Create Image greatest x greatest y
- *          image.x = smallest x
- *          image.y = smallest y
- *
- *
- */
+  //#endregion
+};
