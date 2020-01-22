@@ -1,8 +1,6 @@
 import io from "socket.io-client";
 
 //#region --------------------- Server Constants ---------------------
-const socket = io(":5000");
-
 const EVENTS = {
   SEND_CHAT_MESSAGE: "SEND_CHAT_MESSAGE",
   CHANGE_NAME: "CHANGE_Name",
@@ -17,7 +15,12 @@ const EVENTS = {
   REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
 };
 
-const PORT = 5000;
+const PORT = 8080;
+const SERVER_HOST = "https://3kqyq.sse.codesandbox.io";
+export const audioURL = `${SERVER_HOST}/audio`;
+export const assetURL = `${SERVER_HOST}/assets`;
+const socket = io(SERVER_HOST);
+
 //#endregion
 //#region --------------------- Helper Functions ---------------------
 const unsubscribeEvent = (event, callback) => {
@@ -46,9 +49,6 @@ export const sendChat = message => {
 };
 //#endregion
 //#region --------------------- Audio ---------------------
-
-export const audioURL = `http://${window.location.hostname}:${PORT}/audio`;
-
 export const subscribeAudio = (cb, once = false) => {
   if (once) {
     socket.once(EVENTS.CHANGE_AUDIO, data => cb(data));
@@ -116,7 +116,6 @@ export const deleteDrawing = id => {
   socket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
 };
 
-
 export const updateTokenCard = elt => {
   socket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, elt);
 };
@@ -148,5 +147,4 @@ export const changeName = newName => {
   socket.emit(EVENTS.COMMAND_NAME, newName);
 };
 
-export const assetURL = `http://${window.location.hostname}:${PORT}/assets`;
 //#endregion

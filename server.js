@@ -41,6 +41,8 @@ deckapi
   .then(data => console.log(data))
   .catch(err => console.log(err));
 
+const PORT = 8080;
+
 //#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {
   client.on(EVENTS.COMMAND_NAME, newName => {
@@ -78,7 +80,7 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.SEND_NEW_DRAWING, object => {
-    console.log(`Client ${client.id} sent new drawing`)
+    console.log(`Client ${client.id} sent new drawing`);
     object.id = drawingId++;
     drawing.push(object);
     ioSocket.emit(EVENTS.SEND_NEW_DRAWING, object);
@@ -185,7 +187,6 @@ app.get("/assets", (req, res) => {
 
 app.use(express.static("./static"));
 
-const PORT = 5000;
 server.listen(PORT, () => {
   console.log("Listening");
 });

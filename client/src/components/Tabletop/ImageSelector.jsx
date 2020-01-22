@@ -23,6 +23,7 @@ export const ImageSelector = () => {
           <img
             key={id}
             src={`${assetURL}/${elt}`}
+            alt="Alt Prop"
             onDoubleClick={e => {
               console.log(e.target);
               if (e.target.src) {
