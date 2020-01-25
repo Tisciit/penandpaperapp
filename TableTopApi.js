@@ -46,8 +46,8 @@ exports.analysePoints = pnts => {
 
   let minX = Infinity;
   let minY = Infinity;
-  let maxX = 0;
-  let maxY = 0;
+  let maxX = 1;
+  let maxY = 1;
 
   for (const p of points) {
     minX = Math.min(minX, p.x);
@@ -91,7 +91,8 @@ exports.convertIncomingDrawing = drawing => {
   if (drawing.stroke.weight && !arrayNumeric([drawing.stroke.weight]))
     return moduleLog("Stroke Weight is not numeric") && false;
   if (!drawing.points) return moduleLog("No Points defined") && false;
-
+  if (drawing.points.length < 2)
+    return moduleLog("Too few points!", drawing.points) && false;
   //tmp array before cleanup
   const points = [];
   for (const p of drawing.points) {
@@ -106,11 +107,11 @@ exports.convertIncomingDrawing = drawing => {
   }
 
   return {
-      type: drawing.type,
-      stroke: drawing.stroke || undefined,
-      fill: drawing.fill || undefined,
-      points: points
-  }
+    type: drawing.type,
+    stroke: drawing.stroke || undefined,
+    fill: drawing.fill || undefined,
+    points: points
+  };
 };
 
 exports.storeDrawing = drawing => {

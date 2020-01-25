@@ -558,7 +558,7 @@ export const sketch = p => {
     //Clean up mousepressedorigin
 
     //#region Handle Draw
-    if (points.length > 0) {
+    if (points.length > 1) {
       //const img = pointsToImage(points);
       const obj = storeShape(3, [255, 0, 0], null, points);
       sendNewDrawing(obj);
