@@ -16,7 +16,7 @@ const EVENTS = {
 };
 
 const PORT = 8080;
-const SERVER_HOST = "https://3kqyq.sse.codesandbox.io";
+const SERVER_HOST = "http://localhost:5000";
 export const audioURL = `${SERVER_HOST}/audio`;
 export const assetURL = `${SERVER_HOST}/assets`;
 const socket = io(SERVER_HOST);
