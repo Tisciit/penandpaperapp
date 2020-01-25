@@ -364,9 +364,11 @@ export const sketch = p => {
       const { drawing, tokenCards } = allContent;
 
       drawings.splice(0, drawings.length);
-      drawings.push(...drawing);
 
-      for (const d of drawings) {
+      for (const d of drawing) {
+        const image = getNewDrawingImage(d);
+        d.image = image;
+        drawings.push(d);
         drawDrawing(d);
       }
 
