@@ -115,17 +115,8 @@ export const sketch = p => {
   function drawDrawing(drawing) {
     if (drawing === undefined) return;
 
-    let img = p.createImage(drawing.w, drawing.h);
-    console.log(img);
-    console.log(drawing);
-    img.loadPixels();
-    for (let i = 0; i < img.pixels.length; i++) {
-      img.pixels[i] = drawing.pixels[i];
-    }
-    img.updatePixels();
-
     drawingLayer.image(
-      img,
+      drawing.image,
       drawing.x,
       drawing.y,
       drawing.width,
@@ -152,60 +143,48 @@ export const sketch = p => {
     }
   }
 
-  function pointsToImage(points) {
-    function analyzePoints(points) {
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = 0;
-      let maxY = 0;
-
-      for (const p of points) {
-        minX = Math.min(minX, p.x);
-        maxX = Math.max(maxX, p.x);
-        minY = Math.min(minY, p.y);
-        maxY = Math.max(maxY, p.y);
-      }
-
-      return { minX, maxX, minY, maxY };
-    }
-
-    const { minX, maxX, minY, maxY } = analyzePoints(points);
+  function getNewDrawingImage(drawing) {
+    const width = drawing.width;
+    const height = drawing.height;
+    const points = drawing.points;
 
     //Outside strokes would be cut off, therefore we need to add them to the width
-    const STROKEWEIGHT = 5;
-    const TWO_SW = STROKEWEIGHT * 2;
 
-    const width = Math.floor(maxX - minX + TWO_SW);
-    const height = Math.floor(maxY - minY + TWO_SW);
-    
     const gb = p.createGraphics(width, height);
 
     //TODO: Drawing options
-    gb.noFill();
-    gb.stroke(p.color(255, 0, 255));
-    gb.strokeWeight(5);
+    if (drawing.stroke.color) {
+      gb.stroke(
+        p.color(
+          drawing.stroke.color[0],
+          drawing.stroke.color[1],
+          drawing.stroke.color[2]
+        )
+      );
+    }
+    if (drawing.stroke.weight) {
+      gb.strokeWeight(drawing.stroke.weight);
+    }
+
+    if (drawing.fill.color) {
+      gb.fill(
+        p.color(
+          drawing.fill.color[0],
+          drawing.fill.color[1],
+          drawing.fill.color[2]
+        )
+      );
+    } else {
+      gb.noFill();
+    }
 
     gb.beginShape();
-    const updatedPoints = [];
     for (const p of points) {
-      const x = p.x - minX + STROKEWEIGHT;
-      const y = p.y - minY + STROKEWEIGHT;
-      updatedPoints.push({ x, y });
-      gb.vertex(x, y);
+      gb.vertex(p.x, p.y);
     }
     gb.endShape();
 
-    gb.loadPixels();
-
-    //Drawing will be offset by the strokeweight, so we need to "re-offset" the coords
-    return {
-      x: minX - STROKEWEIGHT,
-      y: minY - STROKEWEIGHT,
-      w: width,
-      h: height,
-      points: updatedPoints,
-      pixels: gb.pixels
-    };
+    return gb;
   }
 
   function getNextAnchor(x, y) {
@@ -277,6 +256,8 @@ export const sketch = p => {
   });
 
   subscribeDrawings(data => {
+    const drawing = getNewDrawingImage(data);
+    data.image = drawing;
     drawings.push(data);
     drawDrawing(data);
   });
@@ -576,9 +557,9 @@ export const sketch = p => {
 
     //#region Handle Draw
     if (points.length > 0) {
-      const img = pointsToImage(points);
-      //const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-      sendNewDrawing(img);
+      //const img = pointsToImage(points);
+      const obj = storeShape(3, [255, 0, 0], null, points);
+      sendNewDrawing(obj);
       points.splice(0, points.length);
       tempLayer.clear();
     }

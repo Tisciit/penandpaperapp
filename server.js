@@ -5,9 +5,14 @@ const ioSocket = require("socket.io")(server);
 const fs = require("fs");
 const deckapi = require("./deckofcardsapi");
 
+const {
+  analysePoints,
+  convertIncomingDrawing,
+  storeDrawing,
+  getDrawings
+} = require("./TableTopApi");
+
 const chatHistory = [];
-const drawing = [];
-let drawingId = 1;
 
 const tokenCards = [];
 let tokenCardId = 1;
@@ -78,15 +83,30 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.SEND_NEW_DRAWING, object => {
-    console.log(`Client ${client.id} sent new drawing`)
-    object.id = drawingId++;
-    drawing.push(object);
-    ioSocket.emit(EVENTS.SEND_NEW_DRAWING, object);
+    console.log(`Client ${client.id} sent new drawing`);
+    const drawing = convertIncomingDrawing(object);
+    if (drawing) {
+      const { minX, minY, width, height, points } = analysePoints(
+        drawing.points
+      );
+      //Store relative points
+      drawing.points = points;
+      drawing.x = minX;
+      drawing.y = minY;
+      drawing.width = width;
+      drawing.height = height;
+
+      const stored = storeDrawing(drawing);
+      ioSocket.emit(EVENTS.SEND_NEW_DRAWING, stored);
+    }
   });
 
   client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {
     console.log(`Client ${client.id} requested existing tabletop`);
-    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, { drawing, tokenCards });
+    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, {
+      drawing: getDrawings(),
+      tokenCards
+    });
   });
 
   client.on(EVENTS.REQUEST_DELETION_DRAWING, id => {
