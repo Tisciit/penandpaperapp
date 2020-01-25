@@ -46,6 +46,8 @@ deckapi
   .then(data => console.log(data))
   .catch(err => console.log(err));
 
+const PORT = 8080;
+
 //#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {
   client.on(EVENTS.COMMAND_NAME, newName => {
@@ -207,7 +209,6 @@ app.get("/assets", (req, res) => {
 
 app.use(express.static("./static"));
 
-const PORT = 5000;
 server.listen(PORT, () => {
   console.log("Listening");
 });
