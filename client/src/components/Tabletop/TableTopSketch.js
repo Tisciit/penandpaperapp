@@ -23,124 +23,129 @@ export const sketch = p => {
 
   function loadTokenOrCard(token_or_card) {
     p.loadImage(token_or_card.image, data => {
-      token_or_card.pImage = data;
-      token_or_card.aspectRatio = data.height / data.width;
+      const gb = p.createGraphics(data.width, data.height);
+      gb.image(data, 0, 0, data.width, data.height);
+      token_or_card.originalData = data; //TO redraw the stuff!
+      token_or_card.image = gb;
       const sizeMod = token_or_card.type === "CARD" ? 0.4 : 0.4;
       token_or_card.width = data.width * sizeMod;
       token_or_card.height = data.height * sizeMod;
       token_or_card.x = token_or_card.x || 0;
       token_or_card.y = token_or_card.y || 0;
       tokenAndCards.push(token_or_card);
-      drawTokenOrCards();
+      drawTableTopElement(token_or_card);
     });
   }
 
   function updateLocalTokenCard(index, x, y) {
     tokenAndCards[index].x = x;
     tokenAndCards[index].y = y;
-    drawTokenOrCards();
+    drawTableTopElement(tokenAndCards[index]);
   }
 
   function getSelectedTableTopElements(x, y, w, h) {
-    if (!x || !y) return "Oof";
+    console.clear();
 
-    function getTokenCards(x, y, arr) {
-      for (const elt of tokenAndCards) {
-        if (
-          x >= elt.x &&
-          x <= elt.x + elt.width &&
-          y >= elt.y &&
-          y <= elt.y + elt.height
-        ) {
-          if (arr) {
-            arr.push(elt);
-          } else {
-            return elt;
-          }
-        }
-      }
-    }
-    function getDrawings(x, y, arr) {
-      let tolerance = 1;
-      for (const elt of drawings) {
+    function getTableTopElements(
+      selectionX,
+      selectionY,
+      selectionWidth,
+      selectionHeight
+    ) {
+      const found = [];
+
+      const tableTopElements = [...drawings, ...tokenAndCards];
+      console.log(tableTopElements);
+      for (const elt of tableTopElements) {
         if (elt === undefined) continue;
+        console.log(elt);
+        const { x, y, width, height } = elt;
+        const xLeft = x;
+        const xRight = x + width;
+        const yTop = y;
+        const yBottom = y + height;
 
-        let found;
-        const { type } = elt;
-
-        switch (type) {
-          case "SHAPE":
-            const { stroke, points } = elt;
-
-            if (stroke) {
-              tolerance += stroke.weight;
-            }
-
-            for (let p of points) {
-              if (
-                p.x < x + tolerance &&
-                p.x > x - tolerance &&
-                p.y < y + tolerance &&
-                p.y > y - tolerance
-              ) {
-                found = elt;
-              }
-            }
-            break;
-          default:
-            break;
-        }
-
-        if (arr && found) {
-          arr.push(found);
-        } else if (found) {
-          return found;
+        if (
+          selectionX < xLeft &&
+          selectionX + selectionWidth > xRight &&
+          selectionY < yTop &&
+          selectionY + selectionHeight > yBottom
+        ) {
+          //elt found
+          found.push(elt);
         }
       }
+      return found;
+    }
+    function getSingleElement(selectionX, selectionY) {
+      const found = [];
+
+      const tableTopElements = [...drawings, ...tokenAndCards];
+      console.log(tableTopElements);
+      for (const elt of tableTopElements) {
+        if (elt === undefined) continue;
+        console.log(elt);
+        const { x, y, width, height } = elt;
+        const xLeft = x;
+        const xRight = x + width;
+        const yTop = y;
+        const yBottom = y + height;
+
+        if (
+          xLeft < selectionX &&
+          xRight > selectionX &&
+          yTop < selectionY &&
+          yBottom > selectionY
+        ) {
+          //elt found
+          found.push(elt);
+        }
+      }
+      return found;
     }
 
-    //Single Item selection as no range is specified
-    if (!w || !h) {
-      let element = getDrawings(x, y);
-      if (!element) {
-        element = getTokenCards(x, y);
-      }
-    } else {
-      //Multi-Selection
-      const elements = [];
-      getDrawings(x, y, w, h, elements);
-    }
+    const left = w >= 0 ? x : Math.floor(x + w);
+    const top = h >= 0 ? y : Math.floor(y + h);
+    const width = Math.abs(w);
+    const height = Math.abs(h);
+    console.log(left, top);
+    console.log(width, height);
+
+    if (!w || !h) return getSingleElement(left, top);
+
+    return getTableTopElements(left, top, width, height);
   }
 
-  function drawDrawing(drawing) {
-    if (drawing === undefined) return;
+  function drawTableTopElement(element) {
+    if (element === undefined) return;
 
-    drawingLayer.image(
-      drawing.image,
-      drawing.x,
-      drawing.y,
-      drawing.width,
-      drawing.height
+    const canvas = drawingLayer; //TODO: As Tokens and Cards are moved more frequently than drawings, draw those to the tokencardlayer
+    canvas.image(
+      element.image,
+      element.x,
+      element.y,
+      element.width,
+      element.height
     );
-  }
-
-  function drawTokenOrCards() {
-    tokenAndCardLayer.clear();
-    for (const token_or_card of tokenAndCards) {
-      tokenAndCardLayer.image(
-        token_or_card.pImage,
-        token_or_card.x + xOff / zoom,
-        token_or_card.y + yOff / zoom,
-        token_or_card.width / zoom,
-        token_or_card.height / zoom
-      );
-    }
   }
 
   function drawSelected() {
     if (selection.current) {
-      drawDrawing(selection.current);
+      if (Array.isArray(selection.current)) {
+        for (const elt of selection.current) {
+          drawTableTopElement(elt);
+        }
+      } else {
+        drawTableTopElement(selection.current);
+      }
     }
+  }
+
+  function highlight(element) {
+    //As the image attr of all the things is an graphic buffer, we can draw on it!
+    const canvas = element.image;
+    canvas.fill(p.color(0, 100));
+    canvas.rect(0, 0, canvas.width, canvas.height);
   }
 
   function getNewDrawingImage(drawing) {
@@ -259,7 +264,7 @@ export const sketch = p => {
     const drawing = getNewDrawingImage(data);
     data.image = drawing;
     drawings.push(data);
-    drawDrawing(data);
+    drawTableTopElement(data);
   });
 
   subscribeDeletions(id => {
@@ -270,7 +275,7 @@ export const sketch = p => {
 
       drawingLayer.clear();
       for (const drawing of drawings) {
-        drawDrawing(drawing);
+        drawTableTopElement(drawing);
       }
     }
   });
@@ -369,7 +374,7 @@ export const sketch = p => {
         const image = getNewDrawingImage(d);
         d.image = image;
         drawings.push(d);
-        drawDrawing(d);
+        drawTableTopElement(d);
       }
 
       for (const tC of tokenCards) {
@@ -401,101 +406,6 @@ export const sketch = p => {
   p.draw = () => {
     redrawSketch();
     p.EventWithinFrameFired = false;
-    // const { x, y, prevX, prevY, relXOff, relYOff } = getRelativeCoords();
-
-    // switch (mode) {
-    //   //#region MODES.DRAW
-    //   case MODES.DRAW:
-    //     if (p.mouseIsPressed) {
-    //       //If drawing off canvas return
-    //       if (x < 0 || y < 0) return;
-    //       points.push({ x: x - relXOff, y: y - relYOff });
-    //       tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
-    //     } else {
-    //       if (points.length > 0) {
-    //         const obj = storeShape(3, { r: 255, g: 0, b: 0 }, null, points);
-    //         sendNewDrawing(obj);
-    //         points.splice(0, points.length);
-    //         tempLayer.clear();
-    //       }
-    //     }
-    //     break;
-    //   //#endregion
-    //   //#region MODES.DRAG
-    //   case MODES.DRAG:
-    //     if (p.mouseIsPressed) {
-    //       xOff += x - prevX;
-    //       yOff += y - prevY;
-    //     }
-    //     break;
-    //   //#endregion
-    //   //#region MODES.SELECT
-    //   case MODES.SELECT:
-    //     if (p.mouseIsPressed) {
-    //       tempLayer.clear();
-    //       tempLayer.fill(p.color(0, 0, 20, 50));
-    //       tempLayer.rect(0, 0, x, y);
-    //       const selectedDrawing = getSelectedDrawing(
-    //         x - xOff / zoom,
-    //         y - yOff / zoom
-    //       );
-    //       const copy = JSON.parse(JSON.stringify(selectedDrawing));
-    //       if (copy.type !== "none") {
-    //         //Redraw previuosly selected drawing
-    //         drawSelected();
-    //         copy.stroke.color = { r: 0, g: 0, b: 255 };
-    //         drawDrawing(copy);
-    //         selection.current = selectedDrawing;
-    //       }
-    //     }
-    //     break;
-    //   //#endregion
-    //   //#region MODES.DRAGELEMENTS
-    //   case MODES.DRAGELEMENTS:
-    //     if (p.mouseIsPressed) {
-    //       if (!selection.current) {
-    //         const elt = getTokenCard(x, y);
-    //         if (elt.type) {
-    //           selection.current = elt;
-    //         }
-    //       } else {
-    //         const { type } = selection.current;
-    //         //SNAP TO ANCHORS
-    //         switch (type) {
-    //           case "TOKEN":
-    //             const newPoint = getNextAnchor(x, y);
-    //             selection.current.x = newPoint.x - selection.current.width / 2;
-    //             selection.current.y = newPoint.y - selection.current.height / 2;
-    //             break;
-
-    //           case "CARD":
-    //             selection.current.x += x - prevX;
-    //             selection.current.y += y - prevY;
-    //             break;
-
-    //           default:
-    //             break;
-    //         }
-    //         drawTokenOrCards();
-    //       }
-    //     } else {
-    //       //If an object has been selected, send changes to the server
-    //       if (selection.current) {
-    //         const { x, y, id } = selection.current;
-    //         updateTokenCard({
-    //           x,
-    //           y,
-    //           id
-    //         });
-    //       }
-    //       selection.current = undefined;
-    //     }
-    //     break;
-    //   //#endregion
-
-    //   default:
-    //     break;
-    // }
   };
 
   p.mouseWheel = e => {
@@ -555,7 +465,11 @@ export const sketch = p => {
   };
 
   p.mouseReleased = e => {
-    //Clean up mousepressedorigin
+    const originX = selection.mouseInfo.x;
+    const originY = selection.mouseInfo.y;
+    const { x, y } = getRelativeCoords();
+
+    tempLayer.clear();
 
     //#region Handle Draw
     if (points.length > 1) {
@@ -563,9 +477,21 @@ export const sketch = p => {
       const obj = storeShape(3, [255, 0, 0], null, points);
       sendNewDrawing(obj);
       points.splice(0, points.length);
-      tempLayer.clear();
     }
     //#endregion
+
+    if (mode === MODES.SELECT) {
+      selection.current = getSelectedTableTopElements(
+        originX,
+        originY,
+        x - originX,
+        y - originY
+      );
+      for (const elt of selection.current) {
+        highlight(elt);
+        drawTableTopElement(elt);
+      }
+    }
 
     selection.mouseInfo.x = undefined;
     selection.mouseInfo.y = undefined;

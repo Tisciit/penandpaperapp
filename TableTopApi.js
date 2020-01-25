@@ -60,8 +60,8 @@ exports.analysePoints = pnts => {
     p.x -= minX;
     p.y -= minY;
   }
-  const width = maxX - minX;
-  const height = maxY - minY;
+  const width = maxX - minX + 1;
+  const height = maxY - minY + 1;
 
   return {
     points,
@@ -107,7 +107,8 @@ exports.convertIncomingDrawing = drawing => {
   }
 
   return {
-    type: drawing.type,
+    type: "DRAWING",
+    subType: drawing.type,
     stroke: drawing.stroke || undefined,
     fill: drawing.fill || undefined,
     points: points

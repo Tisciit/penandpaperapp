@@ -128,7 +128,8 @@ ioSocket.on("connection", client => {
     if (token.image) {
       //Valid token?
       token.id = tokenCardId++;
-      token.type = "TOKEN";
+      token.type = "TC";
+      token.subType = "TOKEN";
       token.x = token.x || 0;
       token.y = token.y || 0;
       tokenCards.push(token);
@@ -142,7 +143,8 @@ ioSocket.on("connection", client => {
         //Send Drawn Card to everyone :)
         for (let card of resolve) {
           card.id = tokenCardId++;
-          card.type = "CARD";
+          card.type = "TC";
+          card.subType = "CARD";
         }
         tokenCards.push(...resolve);
         ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, resolve);
