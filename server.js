@@ -46,7 +46,7 @@ deckapi
   .then(data => console.log(data))
   .catch(err => console.log(err));
 
-const PORT = 8080;
+const PORT = 5000;
 
 //#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {

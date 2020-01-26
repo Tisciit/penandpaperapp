@@ -119,7 +119,7 @@ export const sketch = p => {
   function drawTableTopElement(element) {
     if (element === undefined) return;
 
-    const canvas = drawingLayer; //TODO: As Tokens and Cards are moved more frequently than drawings, draw those to the tokencardlayer
+    const canvas = element.type === "Drawing" ? drawingLayer : tokenAndCardLayer;
     canvas.image(
       element.image,
       element.x,
