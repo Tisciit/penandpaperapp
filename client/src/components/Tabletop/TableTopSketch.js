@@ -37,6 +37,26 @@ export const sketch = p => {
     });
   }
 
+  function loadDrawing(drawing) {
+    const image = getNewDrawingImage(drawing);
+    drawing.image = image;
+    const img = p.createImage(image.width, image.height);
+    img.copy(
+      image,
+      0,
+      0,
+      image.width,
+      image.height,
+      0,
+      0,
+      image.width,
+      image.height
+    );
+    drawing.originalData = img;
+    tableTopElements.push(drawing);
+    drawTableTopElement(drawing);
+  }
+
   function updateLocalTokenCard(index, x, y) {
     tableTopElements[index].x = x;
     tableTopElements[index].y = y;
@@ -124,6 +144,22 @@ export const sketch = p => {
       element.width,
       element.height
     );
+  }
+
+  function clearSelected() {
+    if (!selection.current) return;
+    for (const elt of selection.current) {
+      console.log("woosh");
+      elt.image.clear();
+      elt.image.image(
+        elt.originalData,
+        0,
+        0,
+        elt.image.width,
+        elt.image.height
+      );
+    }
+    selection.current = undefined;
   }
 
   function drawSelected() {
@@ -217,6 +253,14 @@ export const sketch = p => {
     p.image(tempLayer, xOff, yOff, w, h);
   }
 
+  function redrawLayers() {
+    drawingLayer.clear();
+    tokenAndCardLayer.clear();
+    for (const elt of tableTopElements) {
+      drawTableTopElement(elt);
+    }
+  }
+
   function getRelativeCoords() {
     const x = p.mouseX / zoom;
     const y = p.mouseY / zoom;
@@ -255,13 +299,12 @@ export const sketch = p => {
         loadTokenOrCard(elt);
       }
     }
+    redrawLayers();
   });
 
   subscribeDrawings(data => {
-    const drawing = getNewDrawingImage(data);
-    data.image = drawing;
-    tableTopElements.push(data);
-    drawTableTopElement(data);
+    loadDrawing(data);
+    redrawLayers();
   });
 
   subscribeDeletions(id => {
@@ -270,11 +313,7 @@ export const sketch = p => {
       const index = tableTopElements.indexOf(elt);
       tableTopElements.splice(index, 1);
 
-      drawingLayer.clear();
-      tokenAndCardLayer.clear();
-      for (const elt of tableTopElements) {
-        drawTableTopElement(elt);
-      }
+      redrawLayers();
     }
   });
   //#endregion
@@ -368,10 +407,7 @@ export const sketch = p => {
 
       for (const elt of allContent) {
         if (elt.type === "Drawing") {
-          const image = getNewDrawingImage(elt);
-          elt.image = image;
-          tableTopElements.push(elt);
-          drawTableTopElement(elt);
+          loadDrawing(elt);
         } else {
           //As this is all new stuff, we needn´t check if tokens or cards already exist
           loadTokenOrCard(elt);
@@ -396,8 +432,7 @@ export const sketch = p => {
     const container = document.querySelector(props.container);
     parentWidth = container.clientWidth;
     parentHeight = container.clientHeight;
-    selection.current = undefined;
-    console.log(tableTopElements);
+    clearSelected();
   };
 
   p.draw = () => {
@@ -423,7 +458,8 @@ export const sketch = p => {
           for (let elt of selection.current) {
             deleteDrawing(elt.id);
           }
-          selection.current = undefined;
+          clearSelected();
+          redrawLayers();
         } else if (e.keyCode === 68) {
           //Draw card
           drawCard(() => {});
@@ -457,10 +493,6 @@ export const sketch = p => {
 
       return;
     }
-
-    if (p.mouseButton === p.RIGHT) {
-      //const selected = getSelectedDrawing();
-    }
   };
 
   p.mouseReleased = e => {
@@ -480,6 +512,8 @@ export const sketch = p => {
     //#endregion
 
     if (mode === MODES.SELECT) {
+      clearSelected();
+      redrawLayers();
       selection.current = getSelectedTableTopElements(
         originX,
         originY,
@@ -512,8 +546,16 @@ export const sketch = p => {
     const originXOff = selection.offset.x;
     const originYOff = selection.offset.y;
 
-    //MOVE
-    if (button === "right") {
+    //MOVE SELECTED
+    if (button === "right" && selection.current) {
+      const elt = selection.current[0];
+      elt.x = x;
+      elt.y = y;
+      redrawLayers();
+      return;
+    }
+    //MOVE CANVAS
+    if (button === "right" && !selection.current) {
       xOff = originXOff + x - originX;
       yOff = originYOff + y - originY;
       return;
