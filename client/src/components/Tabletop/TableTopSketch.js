@@ -93,7 +93,7 @@ export const sketch = p => {
           found.push(elt);
         }
       }
-      return found;
+      return found.length > 0 ? found : undefined;
     }
     function getSingleElement(selectionX, selectionY) {
       const found = [];
@@ -117,7 +117,7 @@ export const sketch = p => {
           found.push(elt);
         }
       }
-      return found;
+      return found.length > 0 ? found : undefined;
     }
 
     const left = w >= 0 ? x : Math.floor(x + w);
@@ -520,9 +520,11 @@ export const sketch = p => {
         x - originX,
         y - originY
       );
-      for (const elt of selection.current) {
-        highlight(elt);
-        drawTableTopElement(elt);
+      if (selection.current) {
+        for (const elt of selection.current) {
+          highlight(elt);
+          drawTableTopElement(elt);
+        }
       }
     }
 
