@@ -17,8 +17,8 @@ import { MODES } from "./Tabletop";
 export const sketch = p => {
   //#region ---------------------- Helper Functions ----------------------
   function getTokenOrCardIndex(token_or_card) {
-    const elt = tokenAndCards.find(elt => elt.id === token_or_card.id);
-    return tokenAndCards.indexOf(elt);
+    const elt = tableTopElements.find(elt => elt.id === token_or_card.id);
+    return tableTopElements.indexOf(elt);
   }
 
   function loadTokenOrCard(token_or_card) {
@@ -32,15 +32,15 @@ export const sketch = p => {
       token_or_card.height = data.height * sizeMod;
       token_or_card.x = token_or_card.x || 0;
       token_or_card.y = token_or_card.y || 0;
-      tokenAndCards.push(token_or_card);
+      tableTopElements.push(token_or_card);
       drawTableTopElement(token_or_card);
     });
   }
 
   function updateLocalTokenCard(index, x, y) {
-    tokenAndCards[index].x = x;
-    tokenAndCards[index].y = y;
-    drawTableTopElement(tokenAndCards[index]);
+    tableTopElements[index].x = x;
+    tableTopElements[index].y = y;
+    drawTableTopElement(tableTopElements[index]);
   }
 
   function getSelectedTableTopElements(x, y, w, h) {
@@ -54,8 +54,6 @@ export const sketch = p => {
     ) {
       const found = [];
 
-      const tableTopElements = [...drawings, ...tokenAndCards];
-      console.log(tableTopElements);
       for (const elt of tableTopElements) {
         if (elt === undefined) continue;
         console.log(elt);
@@ -79,8 +77,6 @@ export const sketch = p => {
     }
     function getSingleElement(selectionX, selectionY) {
       const found = [];
-
-      const tableTopElements = [...drawings, ...tokenAndCards];
       console.log(tableTopElements);
       for (const elt of tableTopElements) {
         if (elt === undefined) continue;
@@ -119,7 +115,8 @@ export const sketch = p => {
   function drawTableTopElement(element) {
     if (element === undefined) return;
 
-    const canvas = element.type === "Drawing" ? drawingLayer : tokenAndCardLayer;
+    const canvas =
+      element.type === "Drawing" ? drawingLayer : tokenAndCardLayer;
     canvas.image(
       element.image,
       element.x,
@@ -263,19 +260,20 @@ export const sketch = p => {
   subscribeDrawings(data => {
     const drawing = getNewDrawingImage(data);
     data.image = drawing;
-    drawings.push(data);
+    tableTopElements.push(data);
     drawTableTopElement(data);
   });
 
   subscribeDeletions(id => {
-    const elt = drawings.find(elt => elt.id === id);
+    const elt = tableTopElements.find(elt => elt.id === id);
     if (elt) {
-      const index = drawings.indexOf(elt);
-      drawings.splice(index, 1);
+      const index = tableTopElements.indexOf(elt);
+      tableTopElements.splice(index, 1);
 
       drawingLayer.clear();
-      for (const drawing of drawings) {
-        drawTableTopElement(drawing);
+      tokenAndCardLayer.clear();
+      for (const elt of tableTopElements) {
+        drawTableTopElement(elt);
       }
     }
   });
@@ -307,9 +305,8 @@ export const sketch = p => {
   //#endregion
 
   //Drawing Array & Point Buffer for Drawing
-  const drawings = []; //Objects describing the drawings on the cavas
+  const tableTopElements = []; //Objects for the TableTopElements
   const points = []; // Point Buffer when drawing new points
-  const tokenAndCards = []; //Objects describing tokens and cards
 
   //contains selection info
   const selection = {
@@ -366,20 +363,19 @@ export const sketch = p => {
 
     //Initially get all content from server
     getExistingTableTop(allContent => {
-      const { drawing, tokenCards } = allContent;
+      //Clear TT array
+      tableTopElements.splice(0, tableTopElements.length);
 
-      drawings.splice(0, drawings.length);
-
-      for (const d of drawing) {
-        const image = getNewDrawingImage(d);
-        d.image = image;
-        drawings.push(d);
-        drawTableTopElement(d);
-      }
-
-      for (const tC of tokenCards) {
-        //As this is all new stuff, we needn´t check if tokens or cards already exist
-        loadTokenOrCard(tC);
+      for (const elt of allContent) {
+        if (elt.type === "Drawing") {
+          const image = getNewDrawingImage(elt);
+          elt.image = image;
+          tableTopElements.push(elt);
+          drawTableTopElement(elt);
+        } else {
+          //As this is all new stuff, we needn´t check if tokens or cards already exist
+          loadTokenOrCard(elt);
+        }
       }
     });
 
@@ -401,6 +397,7 @@ export const sketch = p => {
     parentWidth = container.clientWidth;
     parentHeight = container.clientHeight;
     selection.current = undefined;
+    console.log(tableTopElements);
   };
 
   p.draw = () => {
@@ -423,7 +420,9 @@ export const sketch = p => {
       case MODES.SELECT:
         //46 is Delete key
         if (e.keyCode === 46 && selection.current) {
-          deleteDrawing(selection.current.id);
+          for (let elt of selection.current) {
+            deleteDrawing(elt.id);
+          }
           selection.current = undefined;
         } else if (e.keyCode === 68) {
           //Draw card

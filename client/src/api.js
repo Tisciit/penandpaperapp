@@ -8,11 +8,10 @@ const EVENTS = {
   REQUEST_DICE_ROLL: "REQUEST_DICE_ROLL",
   REQUEST_EXISTING_TABLETOP: "REQUEST_EXISTING_TABLETOP",
   SEND_NEW_DRAWING: "SEND_NEW_DRAWING",
-  REQUEST_DELETION_DRAWING: "REQUEST_DELETION",
+  REQUEST_DELETION: "REQUEST_DELETION",
   REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
   REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
   REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD",
-  REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
 };
 
 const PORT = 8080;
@@ -104,16 +103,16 @@ export const sendNewDrawing = obj => {
 };
 export const subscribeDeletions = (cb, once = false) => {
   if (once) {
-    socket.once(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
+    socket.once(EVENTS.REQUEST_DELETION, data => cb(data));
   } else {
-    socket.on(EVENTS.REQUEST_DELETION_DRAWING, data => cb(data));
+    socket.on(EVENTS.REQUEST_DELETION, data => cb(data));
   }
 };
 export const unsubscribeDeletions = () => {
-  unsubscribeEvent(EVENTS.REQUEST_DELETION_DRAWING);
+  unsubscribeEvent(EVENTS.REQUEST_DELETION);
 };
 export const deleteDrawing = id => {
-  socket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
+  socket.emit(EVENTS.REQUEST_DELETION, id);
 };
 
 export const updateTokenCard = elt => {

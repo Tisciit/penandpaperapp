@@ -7,8 +7,9 @@ function moduleLog(...message) {
   }
 }
 //#region -------------------------- Module Constants --------------------------
-const DRAWINGS = [];
-let DRAWINGID = 1;
+const TABLETOPELEMENTS = [];
+let TABLETOPID = 1;
+
 let logging = true;
 //#endregion
 //#region -------------------------- Helper Functions --------------------------
@@ -115,14 +116,22 @@ exports.convertIncomingDrawing = drawing => {
   };
 };
 
-exports.storeDrawing = drawing => {
-  drawing.id = DRAWINGID++;
-  DRAWINGS.push(drawing);
-  moduleLog("New Drawing stored", drawing);
-  return drawing;
+exports.storeTableTopElement = elt => {
+  elt.id = TABLETOPID++;
+  TABLETOPELEMENTS.push(elt);
+  moduleLog(`New Element of type ${elt.type} stored`);
+  return elt;
 };
 
-exports.getDrawings = () => {
-  return DRAWINGS;
+exports.getTableTopElements = (type = undefined) => {
+  if (type) {
+    return TABLETOPELEMENTS.find(elt => elt.type === type);
+  }
+  //Return all TTElements
+  return TABLETOPELEMENTS;
+};
+
+exports.deleteTableTopElement = index => {
+  TABLETOPELEMENTS.splice(index, 1);
 };
 //#endregion

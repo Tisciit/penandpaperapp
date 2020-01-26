@@ -8,38 +8,26 @@ const deckapi = require("./deckofcardsapi");
 const {
   analysePoints,
   convertIncomingDrawing,
-  storeDrawing,
-  getDrawings
+  storeTableTopElement,
+  getTableTopElements,
+  deleteTableTopElement
 } = require("./TableTopApi");
 
 const chatHistory = [];
 
-const tokenCards = [];
-let tokenCardId = 1;
 let currentSong = "./static/sound/beat3.mp3";
 
 const EVENTS = {
-  // NEW_CHAT_MESSAGE: "NEW_CHAT_MESSAGE",
-  // COMMAND_NAME: "COMMAND_NAME",
-  // AUDIO_CHANGE: "AUDIO_CHANGE",
-  // ROLL_DICE: "ROLL_DICE",
-  // CANVAS: "CANVAS",
-  // GETCANVAS: "GETCANVAS",
-  // REMOVECANVAS: "REMOVECANVAS",
-  // DRAWCARD: "DRAW_CARD",
-  // UPDATETOKENORCARD: "UPDATE_TOKENCARD",
-
   SEND_CHAT_MESSAGE: "SEND_CHAT_MESSAGE",
   CHANGE_NAME: "CHANGE_Name",
   CHANGE_AUDIO: "CHANGE_AUDIO",
   REQUEST_DICE_ROLL: "REQUEST_DICE_ROLL",
   REQUEST_EXISTING_TABLETOP: "REQUEST_EXISTING_TABLETOP",
   SEND_NEW_DRAWING: "SEND_NEW_DRAWING",
-  REQUEST_DELETION_DRAWING: "REQUEST_DELETION",
+  REQUEST_DELETION: "REQUEST_DELETION",
   REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
   REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
-  REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD",
-  REQUEST_DELETION_TOKENCARD: "REQUEST_DELETION_TOKENCARD"
+  REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD"
 };
 deckapi
   .shuffleDeck()
@@ -98,30 +86,28 @@ ioSocket.on("connection", client => {
       drawing.width = width;
       drawing.height = height;
 
-      const stored = storeDrawing(drawing);
+      const stored = storeTableTopElement(drawing);
       ioSocket.emit(EVENTS.SEND_NEW_DRAWING, stored);
     }
   });
 
   client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {
     console.log(`Client ${client.id} requested existing tabletop`);
-    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, {
-      drawing: getDrawings(),
-      tokenCards
-    });
+    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, getTableTopElements());
   });
 
-  client.on(EVENTS.REQUEST_DELETION_DRAWING, id => {
+  client.on(EVENTS.REQUEST_DELETION, id => {
     console.log(
-      `Client ${client.id} requested deletion of drawing with id ${id}`
+      `Client ${client.id} requested deletion of element with id ${id}`
     );
-    const elt = drawing.find(elt => elt.id === id);
+    const elements = getTableTopElements();
+    const elt = elements.find(elt => elt.id === id);
     if (elt) {
-      const index = drawing.indexOf(elt);
-      drawing.splice(index, 1);
+      const index = elements.indexOf(elt);
+      deleteTableTopElement(index);
       console.log("Element has been deleted");
 
-      ioSocket.emit(EVENTS.REQUEST_DELETION_DRAWING, id);
+      ioSocket.emit(EVENTS.REQUEST_DELETION, id);
     }
   });
 
@@ -129,13 +115,14 @@ ioSocket.on("connection", client => {
     console.log(token);
     if (token.image) {
       //Valid token?
-      token.id = tokenCardId++;
       token.type = "TC";
       token.subType = "TOKEN";
       token.x = token.x || 0;
       token.y = token.y || 0;
-      tokenCards.push(token);
-      ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, token);
+      ioSocket.emit(
+        EVENTS.REQUEST_UPDATE_TOKENCARD,
+        storeTableTopElement(token)
+      );
     }
   });
   client.on(EVENTS.REQUEST_DRAW_CARD, () => {
@@ -144,12 +131,13 @@ ioSocket.on("connection", client => {
       resolve => {
         //Send Drawn Card to everyone :)
         for (let card of resolve) {
-          card.id = tokenCardId++;
           card.type = "TC";
           card.subType = "CARD";
+          ioSocket.emit(
+            EVENTS.REQUEST_UPDATE_TOKENCARD,
+            storeTableTopElement(card)
+          );
         }
-        tokenCards.push(...resolve);
-        ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, resolve);
       },
       reject => {
         console.log(reject);
