@@ -6,11 +6,13 @@ function moduleLog(...message) {
     }
   }
 }
-//#region -------------------------- Module Constants --------------------------
+//#region -------------------------- Module Variables --------------------------
 const TABLETOPELEMENTS = [];
 let TABLETOPID = 1;
 
+//Control wether this module should log anything
 let logging = true;
+
 //#endregion
 //#region -------------------------- Helper Functions --------------------------
 function checkColor(arr) {
@@ -57,12 +59,14 @@ exports.analysePoints = pnts => {
     maxY = Math.max(maxY, p.y);
   }
 
+  const spaceAround = 10; //TODO: Maybe make Module Variable
+
   for (let p of points) {
-    p.x -= minX;
-    p.y -= minY;
+    p.x -= minX - spaceAround;
+    p.y -= minY - spaceAround;
   }
-  const width = maxX - minX + 1;
-  const height = maxY - minY + 1;
+  const width = maxX - minX + 2 * spaceAround;
+  const height = maxY - minY + 2 * spaceAround;
 
   return {
     points,

@@ -374,6 +374,7 @@ export const sketch = p => {
         calculateEdges(x, y);
         anchors.push({ x, y });
       }
+      backgroundLayer.rect(0, 0, backgroundLayer.width, backgroundLayer.height);
     }
 
     function calculateEdges(x, y) {
