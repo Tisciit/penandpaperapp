@@ -134,4 +134,21 @@ exports.getTableTopElements = (type = undefined) => {
 exports.deleteTableTopElement = index => {
   TABLETOPELEMENTS.splice(index, 1);
 };
+
+exports.updateTableTopElement = (
+  id = -1,
+  x = -1,
+  y = -1,
+  width = -1,
+  height = -1
+) => {
+  const elt = TABLETOPELEMENTS.find(elt => elt.id === id);
+  if (elt) {
+    elt.x = x > -1 ? x : elt.x;
+    elt.y = y > -1 ? y : elt.y;
+    elt.width = width > -1 ? width : elt.width;
+    elt.height = height > -1 ? height : elt.height;
+    return elt;
+  }
+};
 //#endregion

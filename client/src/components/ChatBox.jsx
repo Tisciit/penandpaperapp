@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  subscribeChat,
-  unsubscribeChat,
-  sendChat,
-  changeName,
-  gm_Change_song
-} from "../api";
+import { subscribeChat, sendChat, changeName, gm_Change_song } from "../api";
 import "./ChatBox.css";
 
 const scrollToBottom = obj => obj.scrollTo(0, obj.scrollHeight);
@@ -28,9 +22,8 @@ export const ChatBox = () => {
       ];
       setHistory(tmp);
       //console.log(tmp);
-      unsubscribeChat();
       //Will be re-applied when effect is run again
-    });
+    }, true);
   }, [history]);
 
   useEffect(() => {
@@ -71,7 +64,7 @@ export const ChatBox = () => {
       <div ref={refHistory} className="Chathistory">
         {history.map(elt => elt)}
       </div>
-      <div>
+      <div className="Controls">
         <input
           onKeyDown={e => {
             if (e.keyCode === 13) {

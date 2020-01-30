@@ -1,5 +1,5 @@
 .tabletopWrapper {
-  width: 80%;
+  width: 100%;
 }
 
 .btn_round {
@@ -22,9 +22,9 @@
 
 .sketchContainer {
   position: relative;
-  margin: 1rem;
+  margin: 0.2rem;
   border: 0.2rem solid white;
-  height: 30rem;
+  height: 40rem;
   overflow: hidden;
   z-index: 0;
 }

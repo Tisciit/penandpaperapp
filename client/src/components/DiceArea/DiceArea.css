@@ -1,0 +1,32 @@
+.DiceWrapper {
+  text-align: center;
+  cursor: pointer;
+}
+
+.DiceWrapper div div {
+  padding: 0.2rem;
+}
+
+.Grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 0.1rem;
+}
+
+.Options div:hover {
+  background: rgba(60, 60, 60, 100);
+}
+
+.Active {
+  background: purple !important;
+}
+
+.Dice:hover :nth-child(1) {
+  background: wheat;
+  color: black;
+}
+
+.Dice div:hover {
+  background: wheat;
+  color: black;
+}

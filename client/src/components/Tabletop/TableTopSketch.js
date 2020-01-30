@@ -5,7 +5,8 @@ import {
   subscribeDeletions,
   deleteDrawing,
   drawCard,
-  updateTokenCard,
+  updateTableTopElement,
+  subscribeTableTopUpdates,
   subscribeTokenCards
 } from "../../api";
 import {
@@ -64,8 +65,6 @@ export const sketch = p => {
   }
 
   function getSelectedTableTopElements(x, y, w, h) {
-    console.clear();
-
     function getTableTopElements(
       selectionX,
       selectionY,
@@ -76,7 +75,6 @@ export const sketch = p => {
 
       for (const elt of tableTopElements) {
         if (elt === undefined) continue;
-        console.log(elt);
         const { x, y, width, height } = elt;
         const xLeft = x;
         const xRight = x + width;
@@ -97,10 +95,8 @@ export const sketch = p => {
     }
     function getSingleElement(selectionX, selectionY) {
       const found = [];
-      console.log(tableTopElements);
       for (const elt of tableTopElements) {
         if (elt === undefined) continue;
-        console.log(elt);
         const { x, y, width, height } = elt;
         const xLeft = x;
         const xRight = x + width;
@@ -124,8 +120,6 @@ export const sketch = p => {
     const top = h >= 0 ? y : Math.floor(y + h);
     const width = Math.abs(w);
     const height = Math.abs(h);
-    console.log(left, top);
-    console.log(width, height);
 
     if (!w || !h) return getSingleElement(left, top);
 
@@ -147,9 +141,8 @@ export const sketch = p => {
   }
 
   function clearSelected() {
-    if (!selection.current) return;
-    for (const elt of selection.current) {
-      console.log("woosh");
+    if (!INTERACTIONINFO.selection) return;
+    for (const elt of INTERACTIONINFO.selection) {
       elt.image.clear();
       elt.image.image(
         elt.originalData,
@@ -159,19 +152,7 @@ export const sketch = p => {
         elt.image.height
       );
     }
-    selection.current = undefined;
-  }
-
-  function drawSelected() {
-    if (selection.current) {
-      if (Array.isArray(selection.current)) {
-        for (const elt of selection.current) {
-          drawTableTopElement(elt);
-        }
-      } else {
-        drawTableTopElement(selection.current);
-      }
-    }
+    INTERACTIONINFO.selection = undefined;
   }
 
   function highlight(element) {
@@ -287,6 +268,7 @@ export const sketch = p => {
   //#endregion
   //#region ---------------------- API EVents       ----------------------
   subscribeTokenCards(array => {
+    console.log("Yay");
     //If only one token or card comes in, make the value iterable
     const iterable = Array.isArray(array) ? array : [array];
 
@@ -313,6 +295,20 @@ export const sketch = p => {
       const index = tableTopElements.indexOf(elt);
       tableTopElements.splice(index, 1);
 
+      redrawLayers();
+    }
+  });
+
+  subscribeTableTopUpdates(data => {
+    console.log("Woosh");
+    const { id, x, y, width, height } = data;
+    // Get element with id;
+    const toUpdate = tableTopElements.find(elt => elt.id === id);
+    if (toUpdate) {
+      toUpdate.x = x;
+      toUpdate.y = y;
+      toUpdate.width = width;
+      toUpdate.height = height;
       redrawLayers();
     }
   });
@@ -348,10 +344,11 @@ export const sketch = p => {
   const points = []; // Point Buffer when drawing new points
 
   //contains selection info
-  const selection = {
-    current: undefined,
+  const INTERACTIONINFO = {
+    selection: undefined,
     mouseInfo: { x: undefined, y: undefined, button: undefined },
-    offset: { x: undefined, y: undefined }
+    offset: { x: undefined, y: undefined },
+    somethingdragged: false
   };
   //#endregion
   //#region ---------------------- Canvas Events    ----------------------
@@ -402,11 +399,11 @@ export const sketch = p => {
 
     //Initially get all content from server
     getExistingTableTop(allContent => {
-      //Clear TT array
+      console.log(allContent);
       tableTopElements.splice(0, tableTopElements.length);
 
       for (const elt of allContent) {
-        if (elt.type === "Drawing") {
+        if (elt.type === "DRAWING") {
           loadDrawing(elt);
         } else {
           //As this is all new stuff, we needn´t check if tokens or cards already exist
@@ -451,11 +448,12 @@ export const sketch = p => {
   };
 
   p.keyPressed = e => {
+    if (!mouseWithInParent()) return;
     switch (mode) {
       case MODES.SELECT:
         //46 is Delete key
-        if (e.keyCode === 46 && selection.current) {
-          for (let elt of selection.current) {
+        if (e.keyCode === 46 && INTERACTIONINFO.selection) {
+          for (let elt of INTERACTIONINFO.selection) {
             deleteDrawing(elt.id);
           }
           clearSelected();
@@ -477,11 +475,11 @@ export const sketch = p => {
     tempLayer.clear();
     //Set Info Object where Mouse has been pressed.
     const { x, y } = getRelativeCoords();
-    selection.mouseInfo.x = x;
-    selection.mouseInfo.y = y;
-    selection.mouseInfo.button = p.mouseButton;
-    selection.offset.x = xOff;
-    selection.offset.y = yOff;
+    INTERACTIONINFO.mouseInfo.x = x;
+    INTERACTIONINFO.mouseInfo.y = y;
+    INTERACTIONINFO.mouseInfo.button = p.mouseButton;
+    INTERACTIONINFO.offset.x = xOff;
+    INTERACTIONINFO.offset.y = yOff;
 
     if (p.mouseButton === p.CENTER) {
       //Toggle between select and draw
@@ -494,70 +492,29 @@ export const sketch = p => {
       return;
     }
   };
-
-  p.mouseReleased = e => {
-    const originX = selection.mouseInfo.x;
-    const originY = selection.mouseInfo.y;
-    const { x, y } = getRelativeCoords();
-
-    tempLayer.clear();
-
-    //#region Handle Draw
-    if (points.length > 1) {
-      //const img = pointsToImage(points);
-      const obj = storeShape(3, [255, 0, 0], null, points);
-      sendNewDrawing(obj);
-      points.splice(0, points.length);
-    }
-    //#endregion
-
-    if (mode === MODES.SELECT) {
-      clearSelected();
-      redrawLayers();
-      selection.current = getSelectedTableTopElements(
-        originX,
-        originY,
-        x - originX,
-        y - originY
-      );
-      if (selection.current) {
-        for (const elt of selection.current) {
-          highlight(elt);
-          drawTableTopElement(elt);
-        }
-      }
-    }
-
-    selection.mouseInfo.x = undefined;
-    selection.mouseInfo.y = undefined;
-    selection.mouseInfo.button = undefined;
-
-    selection.offset.x = undefined;
-    selection.offset.y = undefined;
-  };
-
   p.mouseDragged = e => {
     //Limit event Firing to frameRate for performance
     if (!mouseWithInParent() || p.EventWithinFrameFired) return;
     p.EventWithinFrameFired = true;
 
     const { x, y, prevX, prevY, relXOff, relYOff } = getRelativeCoords();
-    const originX = selection.mouseInfo.x;
-    const originY = selection.mouseInfo.y;
-    const button = selection.mouseInfo.button;
-    const originXOff = selection.offset.x;
-    const originYOff = selection.offset.y;
+    const originX = INTERACTIONINFO.mouseInfo.x;
+    const originY = INTERACTIONINFO.mouseInfo.y;
+    const button = INTERACTIONINFO.mouseInfo.button;
+    const originXOff = INTERACTIONINFO.offset.x;
+    const originYOff = INTERACTIONINFO.offset.y;
 
     //MOVE SELECTED
-    if (button === "right" && selection.current) {
-      const elt = selection.current[0];
+    if (button === "right" && INTERACTIONINFO.selection) {
+      const elt = INTERACTIONINFO.selection[0];
       elt.x = x;
       elt.y = y;
+      INTERACTIONINFO.somethingdragged = true;
       redrawLayers();
       return;
     }
     //MOVE CANVAS
-    if (button === "right" && !selection.current) {
+    if (button === "right" && !INTERACTIONINFO.selection) {
       xOff = originXOff + x - originX;
       yOff = originYOff + y - originY;
       return;
@@ -582,6 +539,51 @@ export const sketch = p => {
       tempLayer.ellipse(x - xOff / zoom, y - yOff / zoom, 5);
       return;
     }
+  };
+  p.mouseReleased = e => {
+    const originX = INTERACTIONINFO.mouseInfo.x;
+    const originY = INTERACTIONINFO.mouseInfo.y;
+    const { x, y } = getRelativeCoords();
+
+    tempLayer.clear();
+
+    //#region Handle Draw
+    if (points.length > 1) {
+      //const img = pointsToImage(points);
+      const obj = storeShape(3, [255, 0, 0], null, points);
+      sendNewDrawing(obj);
+      points.splice(0, points.length);
+    }
+    //#endregion
+
+    if (mode === MODES.SELECT) {
+      if (INTERACTIONINFO.somethingdragged) {
+        console.log(INTERACTIONINFO);
+        INTERACTIONINFO.somethingdragged = false;
+        updateTableTopElement(INTERACTIONINFO.selection[0]);
+      }
+      clearSelected();
+      redrawLayers();
+      INTERACTIONINFO.selection = getSelectedTableTopElements(
+        originX,
+        originY,
+        x - originX,
+        y - originY
+      );
+      if (INTERACTIONINFO.selection) {
+        for (const elt of INTERACTIONINFO.selection) {
+          highlight(elt);
+          drawTableTopElement(elt);
+        }
+      }
+    }
+
+    INTERACTIONINFO.mouseInfo.x = undefined;
+    INTERACTIONINFO.mouseInfo.y = undefined;
+    INTERACTIONINFO.mouseInfo.button = undefined;
+
+    INTERACTIONINFO.offset.x = undefined;
+    INTERACTIONINFO.offset.y = undefined;
   };
 
   //#endregion

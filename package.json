@@ -6,6 +6,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "node-fetch": "^2.6.0",
+    "rpg-dice-roller": "^4.0.2",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {

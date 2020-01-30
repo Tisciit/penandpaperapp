@@ -4,14 +4,15 @@ const server = require("http").createServer(app);
 const ioSocket = require("socket.io")(server);
 const fs = require("fs");
 const deckapi = require("./deckofcardsapi");
-
 const {
   analysePoints,
   convertIncomingDrawing,
   storeTableTopElement,
   getTableTopElements,
-  deleteTableTopElement
+  deleteTableTopElement,
+  updateTableTopElement
 } = require("./TableTopApi");
+const { DiceRoll } = require("rpg-dice-roller/lib/umd/bundle");
 
 const chatHistory = [];
 
@@ -19,15 +20,15 @@ let currentSong = "./static/sound/beat3.mp3";
 
 const EVENTS = {
   SEND_CHAT_MESSAGE: "SEND_CHAT_MESSAGE",
-  CHANGE_NAME: "CHANGE_Name",
+  CHANGE_NAME: "CHANGE_NAME",
   CHANGE_AUDIO: "CHANGE_AUDIO",
   REQUEST_DICE_ROLL: "REQUEST_DICE_ROLL",
   REQUEST_EXISTING_TABLETOP: "REQUEST_EXISTING_TABLETOP",
   SEND_NEW_DRAWING: "SEND_NEW_DRAWING",
-  REQUEST_DELETION: "REQUEST_DELETION",
-  REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
   REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
-  REQUEST_UPDATE_TOKENCARD: "REQUEST_UPDATETOKENCARD"
+  REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
+  REQUEST_DELETION: "REQUEST_DELETION",
+  REQUEST_UPDATE_TABLETOP: "REQUEST_UPDATE_TABLETOP"
 };
 deckapi
   .shuffleDeck()
@@ -38,13 +39,12 @@ const PORT = 5000;
 
 //#region --------------------- Socket ---------------------
 ioSocket.on("connection", client => {
-  client.on(EVENTS.COMMAND_NAME, newName => {
-    console.log(EVENTS.COMMAND_NAME);
+  client.on(EVENTS.CHANGE_NAME, newName => {
+    console.log(`Client ${client.id} changed name to ${newName}`);
     client.name = newName;
   });
 
   client.on(EVENTS.SEND_CHAT_MESSAGE, message => {
-    console.log(EVENTS.NEW_CHAT_MESSAGE);
     const time = new Date().getTime();
     chatHistory.push({ client: client.id, time, message });
     const data = {
@@ -52,8 +52,8 @@ ioSocket.on("connection", client => {
       user: client.name || client.id,
       message: message
     };
-
-    ioSocket.emit(EVENTS.NEW_CHAT_MESSAGE, data);
+    console.log(data);
+    ioSocket.emit(EVENTS.SEND_CHAT_MESSAGE, data);
   });
 
   client.on(EVENTS.CHANGE_AUDIO, newSong => {
@@ -63,13 +63,10 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.REQUEST_DICE_ROLL, (diceString, options) => {
-    const ROLLTOOPTIONS = {
-      EVERYONE: 1,
-      SELF: 2,
-      GM: 3
-    };
+    console.log(`Client ${client.id} requested dice roll ${diceString}`);
 
-    const rollTo = options.rollTo || ROLLTOOPTIONS.EVERYONE;
+    const roll = new DiceRoll(diceString);
+    ioSocket.emit(EVENTS.REQUEST_DICE_ROLL, roll);
   });
 
   client.on(EVENTS.SEND_NEW_DRAWING, object => {
@@ -119,12 +116,10 @@ ioSocket.on("connection", client => {
       token.subType = "TOKEN";
       token.x = token.x || 0;
       token.y = token.y || 0;
-      ioSocket.emit(
-        EVENTS.REQUEST_UPDATE_TOKENCARD,
-        storeTableTopElement(token)
-      );
+      ioSocket.emit(EVENTS.REQUEST_NEW_TOKEN, storeTableTopElement(token));
     }
   });
+  
   client.on(EVENTS.REQUEST_DRAW_CARD, () => {
     console.log(`Client with id ${client.id} requested a card`);
     deckapi.drawCards(1).then(
@@ -134,7 +129,7 @@ ioSocket.on("connection", client => {
           card.type = "TC";
           card.subType = "CARD";
           ioSocket.emit(
-            EVENTS.REQUEST_UPDATE_TOKENCARD,
+            EVENTS.REQUEST_DRAW_CARD,
             storeTableTopElement(card)
           );
         }
@@ -145,13 +140,11 @@ ioSocket.on("connection", client => {
     );
   });
 
-  client.on(EVENTS.REQUEST_UPDATE_TOKENCARD, elt => {
-    const tokenCard = tokenCards.find(c => c.id === elt.id);
-    console.log(tokenCard);
-    if (tokenCard) {
-      tokenCard.x = elt.x;
-      tokenCard.y = elt.y;
-      ioSocket.emit(EVENTS.REQUEST_UPDATE_TOKENCARD, tokenCard);
+  client.on(EVENTS.REQUEST_UPDATE_TABLETOP, elt => {
+    const { id, x, y, width, height } = elt;
+    const updated = updateTableTopElement(id, x, y, width, height);
+    if (updated) {
+      ioSocket.emit(EVENTS.REQUEST_UPDATE_TABLETOP, updated);
     }
   });
 });
