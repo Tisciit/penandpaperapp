@@ -29,6 +29,18 @@ export const Tabletop = () => {
 
   return (
     <div className="tabletopWrapper">
+      <div className="sketchContainer">
+        <P5Wrapper
+          container=".sketchContainer"
+          zoomIn={zoomIn}
+          zoomOut={zoomOut}
+          changeMode={changeMode}
+          mode={mode}
+          zoom={zoom}
+          sketch={sketch}
+        />
+      </div>
+      <ImageSelector />
       <div className="Controls">
         <button
           className="btn_round"
@@ -72,18 +84,6 @@ export const Tabletop = () => {
         ||
         {mode}
       </div>
-      <div className="sketchContainer">
-        <P5Wrapper
-          container=".sketchContainer"
-          zoomIn={zoomIn}
-          zoomOut={zoomOut}
-          changeMode={changeMode}
-          mode={mode}
-          zoom={zoom}
-          sketch={sketch}
-        />
-      </div>
-      <ImageSelector />
     </div>
   );
 };

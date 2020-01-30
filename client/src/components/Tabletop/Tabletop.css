@@ -22,8 +22,8 @@
 
 .sketchContainer {
   position: relative;
-  margin: 0.2rem;
-  border: 0.2rem solid white;
+  border: 0.05rem solid wheat;
+  border-radius: 5px;
   height: 40rem;
   overflow: hidden;
   z-index: 0;

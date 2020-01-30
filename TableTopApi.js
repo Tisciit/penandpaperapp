@@ -72,10 +72,10 @@ exports.analysePoints = pnts => {
     points,
     width,
     height,
-    minX,
-    minY,
-    maxX,
-    maxY
+    minX: minX - spaceAround,
+    minY: minY - spaceAround,
+    maxX: maxX + spaceAround,
+    maxY: maxY + spaceAround,
   };
 };
 
