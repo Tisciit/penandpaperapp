@@ -28,7 +28,14 @@ const EVENTS = {
   REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
   REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
   REQUEST_DELETION: "REQUEST_DELETION",
-  REQUEST_UPDATE_TABLETOP: "REQUEST_UPDATE_TABLETOP"
+  REQUEST_UPDATE_TABLETOP: {
+    IDENTIFIER: "REQUEST_UPDATE_TABLETOP",
+    OPTIONS: {
+      ADD: "ADD",
+      UPDATE: "UPDATE",
+      DELETE: "DELETE"
+    }
+  }
 };
 deckapi
   .shuffleDeck()
@@ -69,6 +76,11 @@ ioSocket.on("connection", client => {
     ioSocket.emit(EVENTS.REQUEST_DICE_ROLL, roll);
   });
 
+  client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {
+    console.log(`Client ${client.id} requested existing tabletop`);
+    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, getTableTopElements());
+  });
+
   client.on(EVENTS.SEND_NEW_DRAWING, object => {
     console.log(`Client ${client.id} sent new drawing`);
     const drawing = convertIncomingDrawing(object);
@@ -86,11 +98,6 @@ ioSocket.on("connection", client => {
       const stored = storeTableTopElement(drawing);
       ioSocket.emit(EVENTS.SEND_NEW_DRAWING, stored);
     }
-  });
-
-  client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {
-    console.log(`Client ${client.id} requested existing tabletop`);
-    client.emit(EVENTS.REQUEST_EXISTING_TABLETOP, getTableTopElements());
   });
 
   client.on(EVENTS.REQUEST_DELETION, id => {
@@ -119,7 +126,7 @@ ioSocket.on("connection", client => {
       ioSocket.emit(EVENTS.REQUEST_NEW_TOKEN, storeTableTopElement(token));
     }
   });
-  
+
   client.on(EVENTS.REQUEST_DRAW_CARD, () => {
     console.log(`Client with id ${client.id} requested a card`);
     deckapi.drawCards(1).then(
@@ -128,10 +135,7 @@ ioSocket.on("connection", client => {
         for (let card of resolve) {
           card.type = "TC";
           card.subType = "CARD";
-          ioSocket.emit(
-            EVENTS.REQUEST_DRAW_CARD,
-            storeTableTopElement(card)
-          );
+          ioSocket.emit(EVENTS.REQUEST_DRAW_CARD, storeTableTopElement(card));
         }
       },
       reject => {
@@ -144,7 +148,11 @@ ioSocket.on("connection", client => {
     const { id, x, y, width, height } = elt;
     const updated = updateTableTopElement(id, x, y, width, height);
     if (updated) {
-      ioSocket.emit(EVENTS.REQUEST_UPDATE_TABLETOP, updated);
+      ioSocket.emit(
+        EVENTS.REQUEST_UPDATE_TABLETOP.IDENTIFIER,
+        updated,
+        EVENTS.REQUEST_UPDATE_TABLETOP.OPTIONS.UPDATE
+      );
     }
   });
 });
