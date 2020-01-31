@@ -11,10 +11,12 @@ export const DiceArea = () => {
 
   useEffect(() => {
     const callback = data => {
-      console.log(data);
-      alert(`You rolled ${data.output}`);
+      alert(`You rolled: ${data}`);
     };
     subscribeDice(callback);
+    return function cleanup() {
+      unsubscribeDice();
+    };
   }, []);
 
   const executeRoll = diceStr => {
