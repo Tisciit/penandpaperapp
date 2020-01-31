@@ -484,8 +484,8 @@ export const sketch = p => {
     if (button === "right" && INTERACTIONINFO.selection) {
       const elt = INTERACTIONINFO.selection[0];
 
-      let nextX = x;
-      let nextY = y;
+      let nextX = x - relXOff;
+      let nextY = y - relYOff;
       if (elt.subType === "TOKEN") {
         //TOKEN SNAP TO ANCHORS
         const newCoords = getNextAnchor(x, y);
