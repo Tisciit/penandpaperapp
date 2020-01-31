@@ -268,7 +268,6 @@ export const sketch = p => {
   //#endregion
   //#region ---------------------- API EVents       ----------------------
   subscribeTokenCards(array => {
-    console.log("Yay");
     //If only one token or card comes in, make the value iterable
     const iterable = Array.isArray(array) ? array : [array];
 
@@ -300,7 +299,6 @@ export const sketch = p => {
   });
 
   subscribeTableTopUpdates(data => {
-    console.log("Woosh");
     const { id, x, y, width, height } = data;
     // Get element with id;
     const toUpdate = tableTopElements.find(elt => elt.id === id);
@@ -309,8 +307,11 @@ export const sketch = p => {
       toUpdate.y = y;
       toUpdate.width = width;
       toUpdate.height = height;
-      redrawLayers();
+    } else {
+      //Object does not exist yet.
+      console.log("Object does not exist yet", data);
     }
+    redrawLayers();
   });
   //#endregion
   //#region ---------------------- Sketch Variables ----------------------
@@ -400,7 +401,6 @@ export const sketch = p => {
 
     //Initially get all content from server
     getExistingTableTop(allContent => {
-      console.log(allContent);
       tableTopElements.splice(0, tableTopElements.length);
 
       for (const elt of allContent) {
@@ -559,7 +559,6 @@ export const sketch = p => {
 
     if (mode === MODES.SELECT) {
       if (INTERACTIONINFO.somethingdragged) {
-        console.log(INTERACTIONINFO);
         INTERACTIONINFO.somethingdragged = false;
         updateTableTopElement(INTERACTIONINFO.selection[0]);
       }
