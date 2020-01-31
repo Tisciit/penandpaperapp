@@ -96,7 +96,8 @@ ioSocket.on("connection", client => {
       drawing.height = height;
 
       const stored = storeTableTopElement(drawing);
-      ioSocket.emit(EVENTS.SEND_NEW_DRAWING, stored);
+      const event = EVENTS.REQUEST_UPDATE_TABLETOP;
+      ioSocket.emit(event.IDENTIFIER, stored, event.OPTIONS.ADD);
     }
   });
 
@@ -110,32 +111,43 @@ ioSocket.on("connection", client => {
       const index = elements.indexOf(elt);
       deleteTableTopElement(index);
       console.log("Element has been deleted");
-
-      ioSocket.emit(EVENTS.REQUEST_DELETION, id);
+      const event = EVENTS.REQUEST_UPDATE_TABLETOP;
+      ioSocket.emit(event.IDENTIFIER, id, event.OPTIONS.DELETE);
     }
   });
 
   client.on(EVENTS.REQUEST_NEW_TOKEN, token => {
-    console.log(token);
+    console.log(`Client ${client.id} requested new token: ${token}`);
     if (token.image) {
       //Valid token?
       token.type = "TC";
       token.subType = "TOKEN";
       token.x = token.x || 0;
       token.y = token.y || 0;
-      ioSocket.emit(EVENTS.REQUEST_NEW_TOKEN, storeTableTopElement(token));
+      const event = EVENTS.REQUEST_UPDATE_TABLETOP;
+      ioSocket.emit(
+        event.IDENTIFIER,
+        storeTableTopElement(token),
+        event.OPTIONS.ADD
+      );
     }
   });
 
   client.on(EVENTS.REQUEST_DRAW_CARD, () => {
     console.log(`Client with id ${client.id} requested a card`);
+
     deckapi.drawCards(1).then(
       resolve => {
         //Send Drawn Card to everyone :)
         for (let card of resolve) {
           card.type = "TC";
           card.subType = "CARD";
-          ioSocket.emit(EVENTS.REQUEST_DRAW_CARD, storeTableTopElement(card));
+          const event = EVENTS.REQUEST_UPDATE_TABLETOP;
+          ioSocket.emit(
+            event.IDENTIFIER,
+            storeTableTopElement(card),
+            event.OPTIONS.ADD
+          );
         }
       },
       reject => {
@@ -145,14 +157,12 @@ ioSocket.on("connection", client => {
   });
 
   client.on(EVENTS.REQUEST_UPDATE_TABLETOP, elt => {
+    console.log(`Client ${client.id} updated element with id ${elt.id}`);
     const { id, x, y, width, height } = elt;
     const updated = updateTableTopElement(id, x, y, width, height);
     if (updated) {
-      ioSocket.emit(
-        EVENTS.REQUEST_UPDATE_TABLETOP.IDENTIFIER,
-        updated,
-        EVENTS.REQUEST_UPDATE_TABLETOP.OPTIONS.UPDATE
-      );
+      const event = EVENTS.REQUEST_UPDATE_TABLETOP;
+      ioSocket.emit(event.IDENTIFIER, updated, event.OPTIONS.UPDATE);
     }
   });
 });
