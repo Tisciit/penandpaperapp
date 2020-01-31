@@ -1,13 +1,10 @@
 import {
-  subscribeDrawings,
-  sendNewDrawing,
   getExistingTableTop,
-  subscribeDeletions,
+  sendNewDrawing,
   deleteDrawing,
   drawCard,
   updateTableTopElement,
-  subscribeTableTopUpdates,
-  subscribeTokenCards
+  subscribeTableTopUpdates
 } from "../../api";
 import {
   storeShape /*, storeRectangle, storeLine, storeEllipse*/
@@ -267,49 +264,57 @@ export const sketch = p => {
   }
   //#endregion
   //#region ---------------------- API EVents       ----------------------
-  subscribeTokenCards(array => {
-    //If only one token or card comes in, make the value iterable
-    const iterable = Array.isArray(array) ? array : [array];
+  // subscribeTokenCards(array => {
+  //   //If only one token or card comes in, make the value iterable
+  //   const iterable = Array.isArray(array) ? array : [array];
 
-    for (const elt of iterable) {
-      /* Check if token or card is available locally */
-      const index = getTokenOrCardIndex(elt);
-      if (index !== -1) {
-        updateLocalTokenCard(index, elt.x, elt.y);
+  //   for (const elt of iterable) {
+  //     /* Check if token or card is available locally */
+  //     const index = getTokenOrCardIndex(elt);
+  //     if (index !== -1) {
+  //       updateLocalTokenCard(index, elt.x, elt.y);
+  //     } else {
+  //       loadTokenOrCard(elt);
+  //     }
+  //   }
+  //   redrawLayers();
+  // });
+
+  // subscribeDrawings(data => {
+  //   loadDrawing(data);
+  //   redrawLayers();
+  // });
+
+  // subscribeDeletions(id => {
+  //   const elt = tableTopElements.find(elt => elt.id === id);
+  //   if (elt) {
+  //     const index = tableTopElements.indexOf(elt);
+  //     tableTopElements.splice(index, 1);
+
+  //     redrawLayers();
+  //   }
+  // });
+
+  subscribeTableTopUpdates((operation, data) => {
+    if (operation === "ADD") {
+      if (data.type === "DRAWING") {
+        loadDrawing(data);
       } else {
-        loadTokenOrCard(elt);
+        loadTokenOrCard(data);
       }
-    }
-    redrawLayers();
-  });
-
-  subscribeDrawings(data => {
-    loadDrawing(data);
-    redrawLayers();
-  });
-
-  subscribeDeletions(id => {
-    const elt = tableTopElements.find(elt => elt.id === id);
-    if (elt) {
-      const index = tableTopElements.indexOf(elt);
-      tableTopElements.splice(index, 1);
-
-      redrawLayers();
-    }
-  });
-
-  subscribeTableTopUpdates(data => {
-    const { id, x, y, width, height } = data;
-    // Get element with id;
-    const toUpdate = tableTopElements.find(elt => elt.id === id);
-    if (toUpdate) {
-      toUpdate.x = x;
-      toUpdate.y = y;
-      toUpdate.width = width;
-      toUpdate.height = height;
     } else {
-      //Object does not exist yet.
-      console.log("Object does not exist yet", data);
+      const { id, x, y, width, height } = data;
+      // Get element with id;
+      const toUpdate = tableTopElements.find(elt => elt.id === id);
+      if (toUpdate) {
+        toUpdate.x = x;
+        toUpdate.y = y;
+        toUpdate.width = width;
+        toUpdate.height = height;
+      } else {
+        //Object does not exist yet.
+        console.log("Object does not exist yet", data);
+      }
     }
     redrawLayers();
   });

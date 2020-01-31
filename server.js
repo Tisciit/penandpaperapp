@@ -97,7 +97,13 @@ ioSocket.on("connection", client => {
 
       const stored = storeTableTopElement(drawing);
       const event = EVENTS.REQUEST_UPDATE_TABLETOP;
-      ioSocket.emit(event.IDENTIFIER, stored, event.OPTIONS.ADD);
+
+      const transmit = {
+        operation: event.OPTIONS.ADD,
+        data: stored
+      };
+
+      ioSocket.emit(event.IDENTIFIER, transmit);
     }
   });
 
@@ -112,7 +118,11 @@ ioSocket.on("connection", client => {
       deleteTableTopElement(index);
       console.log("Element has been deleted");
       const event = EVENTS.REQUEST_UPDATE_TABLETOP;
-      ioSocket.emit(event.IDENTIFIER, id, event.OPTIONS.DELETE);
+      const transmit = {
+        operation: event.OPTIONS.DELETE,
+        data: id
+      };
+      ioSocket.emit(event.IDENTIFIER, transmit);
     }
   });
 
@@ -125,11 +135,11 @@ ioSocket.on("connection", client => {
       token.x = token.x || 0;
       token.y = token.y || 0;
       const event = EVENTS.REQUEST_UPDATE_TABLETOP;
-      ioSocket.emit(
-        event.IDENTIFIER,
-        storeTableTopElement(token),
-        event.OPTIONS.ADD
-      );
+      const transmit = {
+        operation: event.OPTIONS.ADD,
+        data: storeTableTopElement(token)
+      };
+      ioSocket.emit(event.IDENTIFIER, transmit);
     }
   });
 
@@ -143,11 +153,11 @@ ioSocket.on("connection", client => {
           card.type = "TC";
           card.subType = "CARD";
           const event = EVENTS.REQUEST_UPDATE_TABLETOP;
-          ioSocket.emit(
-            event.IDENTIFIER,
-            storeTableTopElement(card),
-            event.OPTIONS.ADD
-          );
+          const transmit = {
+            operation: event.OPTIONS.ADD,
+            data: storeTableTopElement(card)
+          };
+          ioSocket.emit(event.IDENTIFIER, transmit);
         }
       },
       reject => {
@@ -162,7 +172,11 @@ ioSocket.on("connection", client => {
     const updated = updateTableTopElement(id, x, y, width, height);
     if (updated) {
       const event = EVENTS.REQUEST_UPDATE_TABLETOP;
-      ioSocket.emit(event.IDENTIFIER, updated, event.OPTIONS.UPDATE);
+      const transmit = {
+        operation: event.OPTIONS.UPDATE,
+        data: updated
+      };
+      ioSocket.emit(event.IDENTIFIER, transmit);
     }
   });
 });

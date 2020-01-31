@@ -11,7 +11,14 @@ const EVENTS = {
   REQUEST_DELETION: "REQUEST_DELETION",
   REQUEST_DRAW_CARD: "REQUEST_DRAW_CARD",
   REQUEST_NEW_TOKEN: "REQUEST_NEW_TOKEN",
-  REQUEST_UPDATE_TABLETOP: "REQUEST_UPDATE_TABLETOP"
+  REQUEST_UPDATE_TABLETOP: {
+    IDENTIFIER: "REQUEST_UPDATE_TABLETOP",
+    OPTIONS: {
+      ADD: "ADD",
+      UPDATE: "UPDATE",
+      DELETE: "DELETE"
+    }
+  }
 };
 
 const PORT = 8080;
@@ -84,49 +91,25 @@ export const rollDice = diceString => {
 //#region --------------------- Interaction with TableTop --------------------------
 
 //#region ------------------ Subscribes ---------------------
-export const subscribeDrawings = (cb, once = false) => {
-  if (once) {
-    socket.once(EVENTS.SEND_NEW_DRAWING, data => cb(data));
-  } else {
-    socket.on(EVENTS.SEND_NEW_DRAWING, data => cb(data));
-  }
-};
-export const subscribeTokenCards = (cb, once = false) => {
-  if (once) {
-    socket.once(EVENTS.REQUEST_NEW_TOKEN, data => cb(data));
-  } else {
-    socket.on(EVENTS.REQUEST_NEW_TOKEN, data => cb(data));
-  }
-};
-export const subscribeCards = (cb, once = false) => {
-  if (once) {
-    socket.once(EVENTS.REQUEST_DRAW_CARD, data => cb(data));
-  } else {
-    socket.on(EVENTS.REQUEST_DRAW_CARD, data => cb(data));
-  }
-};
-export const subscribeDeletions = (cb, once = false) => {
-  if (once) {
-    socket.once(EVENTS.REQUEST_DELETION, data => cb(data));
-  } else {
-    socket.on(EVENTS.REQUEST_DELETION, data => cb(data));
-  }
-};
 export const subscribeTableTopUpdates = (cb, once = false) => {
+  const handler = transmitted => {
+    console.log(transmitted);
+
+    const { operation, data } = transmitted;
+
+    cb(operation, data);
+  };
+
   if (once) {
-    socket.once(EVENTS.REQUEST_UPDATE_TABLETOP, data => cb(data));
+    socket.once(EVENTS.REQUEST_UPDATE_TABLETOP.IDENTIFIER, transmitted =>
+      handler(transmitted)
+    );
   } else {
-    socket.on(EVENTS.REQUEST_UPDATE_TABLETOP, data => cb(data));
+    socket.on(EVENTS.REQUEST_UPDATE_TABLETOP.IDENTIFIER, data => handler(data));
   }
 };
 //#endregion
 //#region ------------------ Unsubscribes ---------------------
-export const unsubscribeDrawings = () => {
-  unsubscribeEvent(EVENTS.SEND_NEW_DRAWING);
-};
-export const unsubscribeDeletions = () => {
-  unsubscribeEvent(EVENTS.REQUEST_DELETION);
-};
 export const unsubscribeTableTopUpdates = () => {
   socket.off(EVENTS.REQUEST_UPDATE_TABLETOP);
 };
