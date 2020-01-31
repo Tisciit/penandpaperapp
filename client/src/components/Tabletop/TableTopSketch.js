@@ -264,36 +264,6 @@ export const sketch = p => {
   }
   //#endregion
   //#region ---------------------- API EVents       ----------------------
-  // subscribeTokenCards(array => {
-  //   //If only one token or card comes in, make the value iterable
-  //   const iterable = Array.isArray(array) ? array : [array];
-
-  //   for (const elt of iterable) {
-  //     /* Check if token or card is available locally */
-  //     const index = getTokenOrCardIndex(elt);
-  //     if (index !== -1) {
-  //       updateLocalTokenCard(index, elt.x, elt.y);
-  //     } else {
-  //       loadTokenOrCard(elt);
-  //     }
-  //   }
-  //   redrawLayers();
-  // });
-
-  // subscribeDrawings(data => {
-  //   loadDrawing(data);
-  //   redrawLayers();
-  // });
-
-  // subscribeDeletions(id => {
-  //   const elt = tableTopElements.find(elt => elt.id === id);
-  //   if (elt) {
-  //     const index = tableTopElements.indexOf(elt);
-  //     tableTopElements.splice(index, 1);
-
-  //     redrawLayers();
-  //   }
-  // });
 
   subscribeTableTopUpdates((operation, data) => {
     if (operation === "ADD") {
@@ -503,7 +473,7 @@ export const sketch = p => {
     if (!mouseWithInParent() || p.EventWithinFrameFired) return;
     p.EventWithinFrameFired = true;
 
-    const { x, y, prevX, prevY, relXOff, relYOff } = getRelativeCoords();
+    const { x, y, relXOff, relYOff } = getRelativeCoords();
     const originX = INTERACTIONINFO.mouseInfo.x;
     const originY = INTERACTIONINFO.mouseInfo.y;
     const button = INTERACTIONINFO.mouseInfo.button;
@@ -513,8 +483,17 @@ export const sketch = p => {
     //MOVE SELECTED
     if (button === "right" && INTERACTIONINFO.selection) {
       const elt = INTERACTIONINFO.selection[0];
-      elt.x = x;
-      elt.y = y;
+
+      let nextX = x;
+      let nextY = y;
+      if (elt.subType === "TOKEN") {
+        //TOKEN SNAP TO ANCHORS
+        const newCoords = getNextAnchor(x, y);
+        nextX = newCoords.x - elt.width / 2;
+        nextY = newCoords.y - elt.height / 2;
+      }
+      elt.x = nextX;
+      elt.y = nextY;
       INTERACTIONINFO.somethingdragged = true;
       redrawLayers();
       return;
