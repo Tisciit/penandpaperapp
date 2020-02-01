@@ -44,3 +44,23 @@
 .ImageSelector img {
   height: 100%;
 }
+
+.ColorSelectorWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.ColorSelectorWrapper .Inputs {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.ColorSelectorWrapper .Inputs p {
+  margin-bottom: .5rem;
+}
+
+.ColorSelectorWrapper .ColorPreview {
+  width: 100%;
+  height: 100%;
+}

@@ -141,6 +141,8 @@ ioSocket.on("connection", client => {
       token.subType = "TOKEN";
       token.x = token.x || 0;
       token.y = token.y || 0;
+      token.width = 90;
+      token.height = 90;
       const event = EVENTS.REQUEST_UPDATE_TABLETOP;
       const transmit = {
         operation: event.OPTIONS.ADD,

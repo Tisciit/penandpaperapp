@@ -341,6 +341,8 @@ export const sketch = p => {
   let fZoomIn;
   let fZoomOut;
   let fChangeMode;
+  let strokeColor;
+  let fillColor;
   //#endregion
 
   //Drawing Array & Point Buffer for Drawing
@@ -433,6 +435,8 @@ export const sketch = p => {
     const container = document.querySelector(props.container);
     parentWidth = container.clientWidth;
     parentHeight = container.clientHeight;
+    strokeColor = props.strokeColor || { r: 255, g: 0, b: 0, a: 255 };
+    fillColor = props.fillColor || { r: 255, g: 0, b: 0, a: 255 };
     clearSelected();
   };
 
@@ -563,7 +567,8 @@ export const sketch = p => {
     //#region Handle Draw
     if (points.length > 1) {
       //const img = pointsToImage(points);
-      const obj = storeShape(3, [255, 0, 0], null, points);
+      const { r, g, b, a } = strokeColor;
+      const obj = storeShape(3, [r, g, b, a], null, points);
       sendNewDrawing(obj);
       points.splice(0, points.length);
     }

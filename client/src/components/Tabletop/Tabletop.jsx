@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import P5Wrapper from "react-p5-wrapper";
 import { sketch } from "./TableTopSketch";
-import { ImageSelector } from "./ImageSelector";
 import "./Tabletop.css";
 
 export const MODES = {
@@ -38,6 +37,8 @@ export const Tabletop = () => {
           mode={mode}
           zoom={zoom}
           sketch={sketch}
+          strokeColor={{ r: 0, g: 255, b: 255, a: 255 }}
+          fillColor={{ r: 0, g: 0, b: 255, a: 255 }}
         />
       </div>
       <div className="Controls">
