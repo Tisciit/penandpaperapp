@@ -80,8 +80,8 @@ export const subscribeDice = (cb, once) => {
   }
 };
 
-export const unsubscribeDice = () => {
-  unsubscribeEvent(EVENTS.REQUEST_DICE_ROLL);
+export const unsubscribeDice = callback => {
+  unsubscribeEvent(EVENTS.REQUEST_DICE_ROLL, callback);
 };
 
 export const rollDice = diceString => {

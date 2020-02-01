@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { subscribeDice, unsubscribeDice, rollDice } from "../../api";
 import { Row } from "./Row";
 import "./DiceArea.css";
@@ -8,16 +8,15 @@ export const DiceArea = () => {
   const [self, setSelf] = useState(false);
   const [exploding, setExploding] = useState(false);
   const [compounding, setCompounding] = useState(false);
+  const refHistory = useRef(null);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const callback = data => {
-      alert(`You rolled: ${data}`);
+      setHistory([...history, <p>{data.output}</p>]);
     };
-    subscribeDice(callback);
-    return function cleanup() {
-      unsubscribeDice();
-    };
-  }, []);
+    subscribeDice(callback, true);
+  }, [history]);
 
   const executeRoll = diceStr => {
     let dStr = diceStr;
@@ -77,6 +76,9 @@ export const DiceArea = () => {
       <Row diceType={8} columns={4} rollFunction={executeRoll} />
       <Row diceType={10} columns={4} rollFunction={executeRoll} />
       <Row diceType={12} columns={4} rollFunction={executeRoll} />
+      <div ref={refHistory} className="DiceResults">
+        {history.map(elt => elt)}
+      </div>
     </div>
   );
 };
