@@ -266,33 +266,54 @@ export const sketch = p => {
   //#region ---------------------- API EVents       ----------------------
 
   subscribeTableTopUpdates((operation, data) => {
-    if (operation === "ADD") {
+    const ADD = () => {
       if (data.type === "DRAWING") {
         loadDrawing(data);
       } else {
         loadTokenOrCard(data);
       }
-    } else if (operation === "UPDATE") {
-      const { id, x, y, width, height } = data;
-      // Get element with id;
-      const toUpdate = tableTopElements.find(elt => elt.id === id);
-      if (toUpdate) {
-        toUpdate.x = x;
-        toUpdate.y = y;
-        toUpdate.width = width;
-        toUpdate.height = height;
-      } else {
-        //Object does not exist yet.
-        console.log("Object does not exist yet", data);
-      }
-    } else {
-      const id = data;
+    };
+    const UPDATE = (element, x, y, width, height) => {
+      element.x = x;
+      element.y = y;
+      element.width = width;
+      element.height = height;
+    };
+    const DELETE = id => {
       const elt = tableTopElements.find(elt => elt.id === id);
       if (elt) {
         const index = tableTopElements.indexOf(elt);
         tableTopElements.splice(index, 1);
       }
+    };
+
+    switch (operation) {
+      case "ADD":
+        ADD();
+        break;
+
+      case "UPDATE":
+        const { id, x, y, width, height } = data;
+        // Get element with id;
+        const toUpdate = tableTopElements.find(elt => elt.id === id);
+        if (toUpdate) {
+          UPDATE(toUpdate, x, y, width, height);
+        } else {
+          //Object does not exist yet.
+          console.log("Object does not exist yet", data);
+          ADD();
+        }
+        break;
+
+      case "DELETE":
+        const id = data;
+        DELETE(id);
+        break;
+
+      default:
+        return;
     }
+
     redrawLayers();
   });
   //#endregion
