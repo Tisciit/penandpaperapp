@@ -71,9 +71,16 @@ ioSocket.on("connection", client => {
 
   client.on(EVENTS.REQUEST_DICE_ROLL, (diceString, options) => {
     console.log(`Client ${client.id} requested dice roll ${diceString}`);
+    const time = new Date().getTime();
 
     const roll = new DiceRoll(diceString);
-    ioSocket.emit(EVENTS.REQUEST_DICE_ROLL, roll);
+    const data = {
+      id: client.id + time,
+      user: client.name || client.id,
+      roll: roll
+    };
+    console.log(roll);
+    ioSocket.emit(EVENTS.REQUEST_DICE_ROLL, data);
   });
 
   client.on(EVENTS.REQUEST_EXISTING_TABLETOP, () => {

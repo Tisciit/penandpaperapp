@@ -13,7 +13,8 @@ export const DiceArea = () => {
 
   useEffect(() => {
     const callback = data => {
-      setHistory([...history, <p>{data.output}</p>]);
+      console.log(data);
+      setHistory([...history, <p key={data.id}>{data.user}: {data.roll.output}</p>]);
     };
     subscribeDice(callback, true);
   }, [history]);
