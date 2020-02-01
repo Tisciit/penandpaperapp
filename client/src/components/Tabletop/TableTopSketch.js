@@ -272,7 +272,7 @@ export const sketch = p => {
       } else {
         loadTokenOrCard(data);
       }
-    } else {
+    } else if (operation === "UPDATE") {
       const { id, x, y, width, height } = data;
       // Get element with id;
       const toUpdate = tableTopElements.find(elt => elt.id === id);
@@ -284,6 +284,13 @@ export const sketch = p => {
       } else {
         //Object does not exist yet.
         console.log("Object does not exist yet", data);
+      }
+    } else {
+      const { id } = data;
+      const elt = tableTopElements.find(elt => elt.id === id);
+      if (elt) {
+        const index = tableTopElements.indexOf(elt);
+        tableTopElements.splice(index, 1);
       }
     }
     redrawLayers();
