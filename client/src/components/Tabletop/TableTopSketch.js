@@ -306,8 +306,8 @@ export const sketch = p => {
         break;
 
       case "DELETE":
-        const id = data;
-        DELETE(id);
+        //Data contains the id to be deleted
+        DELETE(data);
         break;
 
       default:

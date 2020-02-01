@@ -9,6 +9,9 @@ import { Tabletop } from "./components/Tabletop/Tabletop";
 import Content from "./components/Content";
 import NavSelector from "./components/NavSelector";
 
+import messageIcon from "./svg/message-24px.svg";
+import gameIcon from "./svg/games-24px.svg";
+
 function App() {
   return (
     <div className="App">
@@ -16,8 +19,8 @@ function App() {
       <Content>
         <Tabletop rows="100" cols="100" />
         <NavSelector>
-          <ChatBox image={"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Echo_chat_icon.svg/1200px-Echo_chat_icon.svg.png"} />
-          <DiceArea image={"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Echo_chat_icon.svg/1200px-Echo_chat_icon.svg.png"} />
+          <ChatBox image={messageIcon} />
+          <DiceArea image={gameIcon} />
         </NavSelector>
       </Content>
     </div>
