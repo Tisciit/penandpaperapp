@@ -40,7 +40,6 @@ export const Tabletop = () => {
           sketch={sketch}
         />
       </div>
-      <ImageSelector />
       <div className="Controls">
         <button
           className="btn_round"

@@ -5,12 +5,13 @@ import { Navbar } from "./components/Navbar";
 import { ChatBox } from "./components/ChatBox";
 import { DiceArea } from "./components/DiceArea/DiceArea";
 //import { AudioPlayer } from "./components/AudioPlayer";
-import { Tabletop } from "./components/Tabletop/Tabletop";
+import Tabletop, { ImageSelector } from "./components/Tabletop";
 import Content from "./components/Content";
 import NavSelector from "./components/NavSelector";
 
 import messageIcon from "./svg/message-24px.svg";
 import gameIcon from "./svg/games-24px.svg";
+import libraryIcon from "./svg/photo_library-24px.svg";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <NavSelector>
           <ChatBox image={messageIcon} />
           <DiceArea image={gameIcon} />
+          <ImageSelector image={libraryIcon} />
         </NavSelector>
       </Content>
     </div>

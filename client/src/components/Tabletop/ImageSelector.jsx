@@ -17,7 +17,6 @@ export const ImageSelector = () => {
   }, []);
   return (
     <div className="ImageSelector">
-      I AM IMAGE SELECTOR
       {images.map((elt, id) => {
         return (
           <img
