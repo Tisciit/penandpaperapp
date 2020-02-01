@@ -286,7 +286,7 @@ export const sketch = p => {
         console.log("Object does not exist yet", data);
       }
     } else {
-      const { id } = data;
+      const id = data;
       const elt = tableTopElements.find(elt => elt.id === id);
       if (elt) {
         const index = tableTopElements.indexOf(elt);
