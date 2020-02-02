@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from "react";
 
+import { strokeColor } from "./Tabletop";
+
 export const ColorSelector = () => {
   const [r, setR] = useState(100);
   const [g, setG] = useState(100);
   const [b, setB] = useState(100);
   const [a, setA] = useState(100);
+  const [colorHistory, setColorHistory] = useState([]);
+  const historyLen = 30;
 
   useEffect(() => {
-      //TODO: Set Canvas Color here
+    strokeColor.r = parseInt(r);
+    strokeColor.g = parseInt(g);
+    strokeColor.b = parseInt(b);
+    strokeColor.a = parseInt(a);
+
+    const tmp = [{ ...strokeColor }, ...colorHistory];
+    tmp.splice(historyLen, 1);
+    setColorHistory(tmp);
   }, [r, g, b, a]);
 
   return (
@@ -54,6 +65,23 @@ export const ColorSelector = () => {
         className="ColorPreview"
         style={{ background: `rgba(${r}, ${g}, ${b}, ${a})` }}
       ></div>
+      <div className="ColorHistory">
+        {colorHistory.map((elt, index) => (
+          <div
+            key={index}
+            className="ColorPreview Circular"
+            style={{
+              background: `rgba(${elt.r}, ${elt.g}, ${elt.b}, ${elt.a})`
+            }}
+            onClick={() => {
+              setR(elt.r);
+              setG(elt.g);
+              setB(elt.b);
+              setA(elt.a);
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 };

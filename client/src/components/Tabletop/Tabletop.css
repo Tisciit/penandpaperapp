@@ -57,10 +57,25 @@
 }
 
 .ColorSelectorWrapper .Inputs p {
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
 
 .ColorSelectorWrapper .ColorPreview {
   width: 100%;
   height: 100%;
+}
+
+.ColorHistory {
+  display: grid;
+  grid-column: 1 / 3;
+  grid-template-columns: repeat(auto-fit, 2rem);
+}
+
+.ColorHistory .ColorPreview {
+  height: 2rem;
+  width: 2rem;
+}
+
+.Circular {
+  border-radius: 50%;
 }

@@ -174,7 +174,8 @@ export const sketch = p => {
         p.color(
           drawing.stroke.color[0],
           drawing.stroke.color[1],
-          drawing.stroke.color[2]
+          drawing.stroke.color[2],
+          drawing.stroke.color[3]
         )
       );
     }

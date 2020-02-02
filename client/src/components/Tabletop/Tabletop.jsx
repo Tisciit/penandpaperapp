@@ -10,6 +10,13 @@ export const MODES = {
   DRAGELEMENTS: 3
 };
 
+export const strokeColor = {
+  r: 255,
+  g: 255,
+  b: 255,
+  a: 255
+}
+
 export const Tabletop = () => {
   const [mode, setMode] = useState(MODES.SELECT);
   const [zoom, setZoom] = useState(1);
@@ -37,7 +44,7 @@ export const Tabletop = () => {
           mode={mode}
           zoom={zoom}
           sketch={sketch}
-          strokeColor={{ r: 0, g: 255, b: 255, a: 255 }}
+          strokeColor={strokeColor}
           fillColor={{ r: 0, g: 0, b: 255, a: 255 }}
         />
       </div>
