@@ -6,7 +6,7 @@ export const ColorSelector = () => {
   const [r, setR] = useState(100);
   const [g, setG] = useState(100);
   const [b, setB] = useState(100);
-  const [a, setA] = useState(100);
+  const [a, setA] = useState(255);
   const [colorHistory, setColorHistory] = useState([]);
   const historyLen = 30;
 

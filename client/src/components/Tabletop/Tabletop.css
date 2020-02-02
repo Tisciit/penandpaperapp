@@ -1,8 +1,43 @@
 .tabletopWrapper {
   width: 100%;
+  position: relative;
+}
+
+.Controls {
+  position: absolute;
+  border: 1px solid wheat;
+  border-radius: 5px;
+  bottom: 0;
+  left: 0;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+.Controls:hover {
+  opacity: 1;
+}
+
+.DrawingTypeSelectorWrapper {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  opacity: 0;
+}
+
+.DrawingTypeSelectorWrapper:hover {
+  opacity: 1;
+}
+
+.DrawingTypeSelectorWrapper button {
+  border: none;
+  padding: 1rem;
 }
 
 .btn_round {
+  position: relative;
   height: 4rem;
   width: 4rem;
   border-radius: 50%;

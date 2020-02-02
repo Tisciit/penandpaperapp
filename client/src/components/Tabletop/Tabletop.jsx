@@ -3,6 +3,12 @@ import P5Wrapper from "react-p5-wrapper";
 import { sketch } from "./TableTopSketch";
 import "./Tabletop.css";
 
+import pointer from "../../svg/touch_app-24px.svg";
+import draw from "../../svg/gesture-24px.svg";
+import zoomin from "../../svg/zoom_in-24px.svg";
+import zoomout from "../../svg/zoom_out-24px.svg";
+import { DrawingTypeSelector } from "./DrawingTypeSelector";
+
 export const MODES = {
   SELECT: 0,
   DRAG: 1,
@@ -15,18 +21,25 @@ export const strokeColor = {
   g: 255,
   b: 255,
   a: 255
-}
+};
+
+export const fillColor = {
+  r: 255,
+  g: 255,
+  b: 255,
+  a: 255
+};
 
 export const Tabletop = () => {
   const [mode, setMode] = useState(MODES.SELECT);
   const [zoom, setZoom] = useState(1);
 
   const zoomIn = () => {
-    setZoom(zoom - 0.01);
+    setZoom(zoom + 0.01);
   };
 
   const zoomOut = () => {
-    setZoom(zoom + 0.01);
+    setZoom(zoom - 0.01);
   };
 
   const changeMode = newMode => {
@@ -45,7 +58,7 @@ export const Tabletop = () => {
           zoom={zoom}
           sketch={sketch}
           strokeColor={strokeColor}
-          fillColor={{ r: 0, g: 0, b: 255, a: 255 }}
+          fillColor={fillColor}
         />
       </div>
       <div className="Controls">
@@ -55,15 +68,7 @@ export const Tabletop = () => {
             setMode(MODES.SELECT);
           }}
         >
-          SELECT
-        </button>
-        <button
-          className="btn_round"
-          onClick={() => {
-            setMode(MODES.DRAG);
-          }}
-        >
-          Drag
+          <img src={pointer} />
         </button>
         <button
           className="btn_round"
@@ -71,23 +76,16 @@ export const Tabletop = () => {
             setMode(MODES.DRAW);
           }}
         >
-          Draw
-        </button>
-        <button
-          className="btn_round"
-          onClick={() => {
-            setMode(MODES.DRAGELEMENTS);
-          }}
-        >
-          Drag Stuff
+          <img src={draw} />
+          <DrawingTypeSelector />
         </button>
         <button className="btn_round" onClick={zoomOut}>
-          -
+          <img src={zoomout} />
         </button>
         <button className="btn_round" onClick={zoomIn}>
-          +
+          <img src={zoomin} />
         </button>
-        {zoom}
+        {Math.round(zoom * 100) / 100}
         ||
         {mode}
       </div>

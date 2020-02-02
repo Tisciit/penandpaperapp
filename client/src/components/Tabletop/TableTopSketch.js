@@ -14,11 +14,6 @@ import { MODES } from "./Tabletop";
 
 export const sketch = p => {
   //#region ---------------------- Helper Functions ----------------------
-  function getTokenOrCardIndex(token_or_card) {
-    const elt = tableTopElements.find(elt => elt.id === token_or_card.id);
-    return tableTopElements.indexOf(elt);
-  }
-
   function loadTokenOrCard(token_or_card) {
     p.loadImage(token_or_card.image, data => {
       const gb = p.createGraphics(data.width, data.height);
@@ -53,12 +48,6 @@ export const sketch = p => {
     drawing.originalData = img;
     tableTopElements.push(drawing);
     drawTableTopElement(drawing);
-  }
-
-  function updateLocalTokenCard(index, x, y) {
-    tableTopElements[index].x = x;
-    tableTopElements[index].y = y;
-    drawTableTopElement(tableTopElements[index]);
   }
 
   function getSelectedTableTopElements(x, y, w, h) {
@@ -386,7 +375,7 @@ export const sketch = p => {
 
     function calculateEdges(x, y) {
       backgroundLayer.noFill();
-      backgroundLayer.stroke(255, 255, 10);
+      backgroundLayer.stroke(255, 255, 255);
       backgroundLayer.beginShape();
       for (let a = 0; a < 6; a++) {
         let x_ = x + RADIUS * Math.cos((a * Math.PI) / 3);
@@ -426,7 +415,6 @@ export const sketch = p => {
       event.preventDefault();
     };
   };
-
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
     mode = props.mode;
     zoom = props.zoom;
@@ -440,22 +428,19 @@ export const sketch = p => {
     fillColor = props.fillColor || { r: 255, g: 0, b: 0, a: 255 };
     clearSelected();
   };
-
   p.draw = () => {
     redrawSketch();
     p.EventWithinFrameFired = false;
   };
-
   p.mouseWheel = e => {
     if (!mouseWithInParent()) return;
-    if (e.delta > 0) {
+    if (e.delta < 0) {
       //SCROLLING DOWN
       fZoomIn();
     } else {
       fZoomOut();
     }
   };
-
   p.keyPressed = e => {
     if (!mouseWithInParent()) return;
     switch (mode) {
@@ -477,7 +462,6 @@ export const sketch = p => {
         break;
     }
   };
-
   p.mousePressed = e => {
     if (!mouseWithInParent()) return;
 

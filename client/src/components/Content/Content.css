@@ -1,7 +1,7 @@
 .Horizontal {
   display: grid;
   width: 100%;
-  grid-template-columns: 70% 30%;
+  grid-template-columns: 80% 20%;
   grid-template-rows: 1fr;
 }
 
